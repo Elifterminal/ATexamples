@@ -16,7 +16,7 @@ NNN-technique-descriptor
 | `descriptor` | the flavor or application. Hyphens allowed. | `hero`, `flowfield`, `tunnel-scroll`, `gallery` |
 
 ```
-001-glass-hero
+001-glass-catalogue
 002-particles-flowfield
 003-sdf-tunnel-scroll
 ```

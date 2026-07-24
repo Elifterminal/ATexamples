@@ -25,7 +25,7 @@ npm run preview    # serve the built output exactly as Pages will
 index.html          the gallery — builds itself from each example's meta.json
 gallery/            its styles and logic
 examples/
-  001-glass-hero/   one folder per study, each independently liftable
+  001-glass-catalogue/  one folder per study, each independently liftable
 docs/
   CONVENTIONS.md    naming + meta.json fields. Read before adding a study
 scripts/
@@ -38,7 +38,7 @@ scripts/
 npm run new -- particles-flowfield
 ```
 
-Folders are named `NNN-technique-descriptor` — `001-glass-hero`, `002-particles-flowfield`, `003-sdf-tunnel-scroll`. The number is the capability ladder, the technique is the one thing being demonstrated, the descriptor is the flavor.
+Folders are named `NNN-technique-descriptor` — `001-glass-catalogue`, `002-particles-flowfield`, `003-sdf-tunnel-scroll`. The number is the capability ladder, the technique is the one thing being demonstrated, the descriptor is the flavor.
 
 The folder name is for scanning by eye. The searchable detail lives in `meta.json` — techniques, interaction model, stack, mood, difficulty, and `reusable_as`, which is the field that makes a study findable the day you actually need it. The gallery reads those files directly, so a new study appears the moment its folder exists. Nothing to register.
 
@@ -58,7 +58,7 @@ Full rules in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 
 | | study | technique | reusable as |
 |---|---|---|---|
-| 001 | [Glass Hero](examples/001-glass-hero/) | transmission, bloom, vignette | landing hero |
+| 001 | [Glass Catalogue](examples/001-glass-catalogue/) | transmission, instancing | landing hero |
 
 ## License
 

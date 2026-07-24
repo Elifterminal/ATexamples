@@ -1,0 +1,23 @@
+{
+  "title": "Glass Catalogue",
+  "techniques": ["transmission", "instancing", "lightformer-env", "bloom", "vignette"],
+  "interaction": "browse (← →)",
+  "stack": ["r3f", "drei", "postprocessing", "leva"],
+  "mood": "cold, minimal, high-contrast",
+  "difficulty": 2,
+  "reusable_as": "landing hero",
+  "date": "2026-07-24",
+  "assets": [
+    {
+      "id": "glass-knot",
+      "name": "Knot",
+      "geometry": "torusKnotGeometry — Three.js built-in"
+    },
+    {
+      "id": "glass-eye",
+      "name": "Ocellus",
+      "geometry": "sphere + circles + torus + ~220 instanced boxes"
+    }
+  ],
+  "notes": "A named, browsable catalogue of procedural glass forms. No models, no downloaded meshes — every asset is a built-in primitive or instanced geometry, carrying its own lighting recipe. Testing how far treatment alone gets us."
+}
