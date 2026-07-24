@@ -26,6 +26,7 @@ index.html          the gallery — builds itself from each example's meta.json
 gallery/            its styles and logic
 examples/
   001-glass-catalogue/  one folder per study, each independently liftable
+  002-scroll-helix/
 docs/
   CONVENTIONS.md    naming + meta.json fields. Read before adding a study
 scripts/
@@ -59,6 +60,7 @@ Full rules in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 | | study | technique | reusable as |
 |---|---|---|---|
 | 001 | [Glass Catalogue](examples/001-glass-catalogue/) | transmission, instancing, particles | landing hero |
+| 002 | [Scroll Helix](examples/002-scroll-helix/) | horizontal scroll, DOM anchors, particles | full-site scroll shell |
 
 ## License
 

@@ -1,0 +1,20 @@
+{
+  "title": "Scroll Helix",
+  "techniques": [
+    "scroll",
+    "transmission",
+    "particles",
+    "vertex-shader",
+    "tube-geometry",
+    "dom-anchors",
+    "bloom",
+    "vignette"
+  ],
+  "interaction": "horizontal scroll",
+  "stack": ["r3f", "drei", "postprocessing", "leva"],
+  "mood": "cold, continuous, no edges",
+  "difficulty": 3,
+  "reusable_as": "full-site scroll shell",
+  "date": "2026-07-24",
+  "notes": "The capability test for scroll-driven navigation. Horizontal scroll moves a camera along a static glass helix; particles inside drift on their own and surge with scroll velocity. Cards are real DOM anchors positioned by projecting world coordinates. Tests the responsive strategy — normalised progress, aspect-driven camera distance — and the hide-the-seams principle."
+}
