@@ -94,7 +94,7 @@ function App() {
           {asset.Lights ? <asset.Lights /> : null}
         </LightRig>
         <asset.Component />
-        <Post />
+        <Post key={`${asset.id}-post`} scope={asset.id} defaults={asset.post} />
       </Canvas>
 
       <Hud asset={asset} index={index} total={CATALOGUE.length} onSelect={setIndex} />

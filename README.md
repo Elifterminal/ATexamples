@@ -58,7 +58,7 @@ Full rules in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 
 | | study | technique | reusable as |
 |---|---|---|---|
-| 001 | [Glass Catalogue](examples/001-glass-catalogue/) | transmission, instancing | landing hero |
+| 001 | [Glass Catalogue](examples/001-glass-catalogue/) | transmission, instancing, particles | landing hero |
 
 ## License
 
