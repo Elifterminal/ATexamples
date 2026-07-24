@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ATexamples — WebGL studies</title>
+    <meta
+      name="description"
+      content="Iterative WebGL and Three.js front-end studies. Each example is a self-contained page."
+    />
+    <!-- Inlined so it resolves at any path depth, whatever the base is -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%237dd3fc' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./gallery/style.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <h1>ATexamples</h1>
+      <p class="lede">
+        Scroll-driven, shader-led front-end studies. Each one is a self-contained page —
+        built to be lifted whole into a real site later.
+      </p>
+    </header>
+
+    <nav class="filters" id="filters" aria-label="Filter by technique"></nav>
+
+    <main class="grid" id="grid"></main>
+
+    <p class="empty" id="empty" hidden>Nothing matches that combination.</p>
+
+    <footer class="colophon">
+      <span id="count"></span>
+      <a href="https://github.com/Elifterminal/ATexamples">source</a>
+    </footer>
+
+    <script type="module" src="./gallery/main.js"></script>
+  </body>
+</html>
