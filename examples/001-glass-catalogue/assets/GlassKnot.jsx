@@ -20,7 +20,7 @@ function Geometry({ shape }) {
   return <torusKnotGeometry args={[1, 0.32, 220, 32]} />
 }
 
-export function GlassKnot() {
+export function GlassKnot({ quality }) {
   const mesh = useRef()
 
   const { shape, spin } = useControls('knot', {
@@ -38,7 +38,9 @@ export function GlassKnot() {
     distortion: { value: 0.28, min: 0, max: 2, step: 0.01 },
     distortionScale: { value: 0.4, min: 0, max: 2, step: 0.01 },
     temporalDistortion: { value: 0.12, min: 0, max: 1, step: 0.01 },
-    backside: true,
+    // Backside renders the mesh twice through the transmission pass. It is the
+    // single most expensive checkbox on this page.
+    backside: false,
   })
 
   useFrame((_, delta) => {
@@ -51,7 +53,12 @@ export function GlassKnot() {
   return (
     <mesh ref={mesh}>
       <Geometry shape={shape} />
-      <MeshTransmissionMaterial samples={6} resolution={512} transmission={1} {...glass} />
+      <MeshTransmissionMaterial
+        samples={quality.samples}
+        resolution={quality.resolution}
+        transmission={1}
+        {...glass}
+      />
     </mesh>
   )
 }

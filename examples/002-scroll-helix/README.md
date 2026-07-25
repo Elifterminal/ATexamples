@@ -35,9 +35,39 @@ That improves portrait from broken to acceptable. It does not make it good. A ho
 - **Section boundaries** — there are none. One camera, one continuous object.
 - **Still open: the page transition.** Clicking a card here does a normal page load, which is the one seam still fully visible. Hiding it needs a persistent WebGL context with DOM swapping around it, and that's an architectural decision rather than a tweak.
 
-## Known
+## Performance
 
-Not performance-tuned, and heavier than 001 — 22,000 particles plus a transmission pass over a long tube.
+Tuned, but not measured here — the browser this was built through renders on the
+CPU, so no framerate number from the build process would mean anything. Instead
+the page measures itself on whatever GPU it lands on, and every expensive knob is
+exposed so you can find your own ceiling.
+
+**Turn on `perf → stats`** for a live FPS panel. The HUD shows the current pixel
+ratio, which adapts on its own.
+
+| lever | was | now | why it costs |
+|---|---|---|---|
+| pixel ratio | fixed `[1, 2]` | adaptive, 0.75–2.0 | cost scales with the *square*; 2.0 → 1.5 is 44% fewer pixels shaded |
+| transmission resolution | 512 | 256 | this material re-renders the whole scene into a buffer every frame; 512→256 is a quarter of the pixels |
+| `backside` | on | off | renders the mesh twice through that pass — the most expensive checkbox here |
+| composer multisampling | 8 (library default) | 2 | full-screen MSAA on every pass; bloom hides much of what it buys |
+
+The pixel ratio walks itself up when frames are cheap and down when they aren't,
+so a 1080 Ti and a laptop integrated GPU both land somewhere sensible without a
+device check.
+
+**Bug found while doing this:** the merged tube geometries were rebuilt by
+`useMemo` on every parameter change and the previous buffers were never freed —
+so dragging a slider leaked GPU memory until the tab closed. Both are disposed
+now.
+
+These are arithmetic reductions in work, not measured framerate gains. The stats
+panel is the only real evidence, and it runs on your machine, not mine.
+
+Tube tessellation is also exposed here (`perf → segmentsPerTurn`), since a long
+helix multiplies segment count by its number of turns.
+
+## Known
 
 The card links are stand-ins pointing at real pages in this repo, not a designed navigation.
 

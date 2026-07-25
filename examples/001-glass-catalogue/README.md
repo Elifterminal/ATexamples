@@ -36,9 +36,34 @@ Refer to assets by `id`. The ids are stable; names and tuning are not.
 
 **Leva persists by control path.** Remounting a component doesn't reset its values, so per-asset defaults silently did nothing until the control folders were scoped per asset. Worth remembering for any future asset switcher.
 
-## Known
+## Performance
 
-Not performance-tuned. `MeshTransmissionMaterial` re-renders the scene every frame, `backside` on the Knot doubles that, and `dpr={[1, 2]}` doubles pixel work again on a high-DPI display. A pass is owed.
+Tuned, but not measured here — the browser this was built through renders on the
+CPU, so no framerate number from the build process would mean anything. Instead
+the page measures itself on whatever GPU it lands on, and every expensive knob is
+exposed so you can find your own ceiling.
+
+**Turn on `perf → stats`** for a live FPS panel. The HUD shows the current pixel
+ratio, which adapts on its own.
+
+| lever | was | now | why it costs |
+|---|---|---|---|
+| pixel ratio | fixed `[1, 2]` | adaptive, 0.75–2.0 | cost scales with the *square*; 2.0 → 1.5 is 44% fewer pixels shaded |
+| transmission resolution | 512 | 256 | this material re-renders the whole scene into a buffer every frame; 512→256 is a quarter of the pixels |
+| `backside` | on | off | renders the mesh twice through that pass — the most expensive checkbox here |
+| composer multisampling | 8 (library default) | 2 | full-screen MSAA on every pass; bloom hides much of what it buys |
+
+The pixel ratio walks itself up when frames are cheap and down when they aren't,
+so a 1080 Ti and a laptop integrated GPU both land somewhere sensible without a
+device check.
+
+**Bug found while doing this:** the merged tube geometries were rebuilt by
+`useMemo` on every parameter change and the previous buffers were never freed —
+so dragging a slider leaked GPU memory until the tab closed. Both are disposed
+now.
+
+These are arithmetic reductions in work, not measured framerate gains. The stats
+panel is the only real evidence, and it runs on your machine, not mine.
 
 ## Lifting it
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { Lightformer, MeshTransmissionMaterial } from '@react-three/drei'
@@ -16,13 +16,13 @@ export function HelixLights({ span }) {
   )
 }
 
-export function HelixTube({ radius, length, turns, tube, colour, core, coreScale }) {
+export function HelixTube({ radius, length, turns, tube, colour, core, coreScale, resolution, segmentsPerTurn }) {
   // Both strands merged into one geometry so there's a single transmission pass.
   // Segment density is per-turn, so a longer helix doesn't quietly get coarser.
   const build = (tubeRadius) => {
     const strands = [0, Math.PI].map((phase) => {
       const curve = new HelixCurve(radius, length, turns, phase)
-      return new THREE.TubeGeometry(curve, Math.round(turns * 60), tubeRadius, 20, false)
+      return new THREE.TubeGeometry(curve, Math.round(turns * segmentsPerTurn), tubeRadius, 20, false)
     })
 
     const merged = mergeGeometries(strands)
@@ -31,11 +31,16 @@ export function HelixTube({ radius, length, turns, tube, colour, core, coreScale
     return merged
   }
 
-  const glassGeometry = useMemo(() => build(tube), [radius, length, turns, tube])
+  const glassGeometry = useMemo(() => build(tube), [radius, length, turns, tube, segmentsPerTurn])
   const coreGeometry = useMemo(
     () => build(tube * coreScale),
-    [radius, length, turns, tube, coreScale],
+    [radius, length, turns, tube, coreScale, segmentsPerTurn],
   )
+
+  // useMemo replaces the geometry but never frees the old one, so every slider
+  // drag leaked a buffer on the GPU until the tab was closed.
+  useEffect(() => () => glassGeometry.dispose(), [glassGeometry])
+  useEffect(() => () => coreGeometry.dispose(), [coreGeometry])
 
   return (
     <>
@@ -53,9 +58,11 @@ export function HelixTube({ radius, length, turns, tube, colour, core, coreScale
       {/* Low IOR on purpose — a hard refractive index bends the particles behind
           the wall into diagonal bands that read as scales. */}
       <mesh geometry={glassGeometry} frustumCulled={false}>
+        {/* samples and resolution are the two costs that matter here — this
+            material re-renders the whole scene into a buffer every frame. */}
         <MeshTransmissionMaterial
           samples={4}
-          resolution={512}
+          resolution={resolution}
           transmission={1}
           roughness={0.04}
           thickness={0.22}

@@ -30,7 +30,7 @@ export function EyeLights() {
 // An eye with no model in it. A sphere, a disc, a torus, and ~200 instanced
 // boxes — the orb's refraction is what sells it, magnifying and bending the
 // fibres behind it the way real glass would.
-export function GlassEye() {
+export function GlassEye({ quality }) {
   const group = useRef()
 
   const { gaze, drift } = useControls('eye', {
@@ -83,7 +83,12 @@ export function GlassEye() {
 
       <mesh>
         <sphereGeometry args={[1, 96, 96]} />
-        <MeshTransmissionMaterial samples={6} resolution={512} transmission={1} {...orb} />
+        <MeshTransmissionMaterial
+          samples={quality.samples}
+          resolution={quality.resolution}
+          transmission={1}
+          {...orb}
+        />
       </mesh>
     </group>
   )

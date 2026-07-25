@@ -1,12 +1,13 @@
-import { StrictMode, useRef } from 'react'
+import { StrictMode, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Canvas } from '@react-three/fiber'
-import { Environment } from '@react-three/drei'
+import { Environment, Stats } from '@react-three/drei'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { Leva, useControls } from 'leva'
 import { HelixLights, HelixTube } from './scene/HelixTube.jsx'
 import { HelixParticles } from './scene/HelixParticles.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
+import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
 import { useScrollProgress } from './scene/useScrollProgress.js'
 import './style.css'
 
@@ -32,6 +33,16 @@ function Scene({ scroll, cardRefs }) {
     tube: { value: 0.3, min: 0.02, max: 0.9, step: 0.005 },
     visibleWidth: { value: 11, min: 4, max: 30, step: 0.5 },
     damping: { value: 4.5, min: 0.5, max: 20, step: 0.1 },
+  })
+
+  // Every knob in here trades frames for pixels. Defaults are the cheap end;
+  // push them up on a machine that can take it.
+  const perf = useControls('perf', {
+    stats: false,
+    transmissionRes: { value: 256, options: { '128 (cheapest)': 128, 256: 256, 512: 512, 1024: 1024 } },
+    segmentsPerTurn: { value: 40, min: 8, max: 120, step: 2 },
+    multisampling: { value: 2, options: { 'off (fastest)': 0, 2: 2, 4: 4, 8: 8 } },
+    bloom: { value: 0.7, min: 0, max: 3, step: 0.05 },
   })
 
   const flow = useControls('flow', {
@@ -69,6 +80,8 @@ function Scene({ scroll, cardRefs }) {
         colour={flow.colour}
         core={flow.core}
         coreScale={flow.coreScale}
+        resolution={perf.transmissionRes}
+        segmentsPerTurn={perf.segmentsPerTurn}
       />
 
       <HelixParticles
@@ -85,10 +98,14 @@ function Scene({ scroll, cardRefs }) {
         scroll={scroll}
       />
 
-      <EffectComposer>
-        <Bloom intensity={0.7} luminanceThreshold={0.42} luminanceSmoothing={0.3} mipmapBlur />
+      {/* Default multisampling is 8. Dropping it is one of the largest single
+          wins available, and bloom hides much of the aliasing it costs. */}
+      <EffectComposer multisampling={perf.multisampling}>
+        <Bloom intensity={perf.bloom} luminanceThreshold={0.42} luminanceSmoothing={0.3} mipmapBlur />
         <Vignette darkness={0.65} offset={0.2} />
       </EffectComposer>
+
+      {perf.stats ? <Stats /> : null}
     </>
   )
 }
@@ -97,13 +114,15 @@ function App() {
   const scroller = useRef(null)
   const cardRefs = useRef([])
   const scroll = useRef({ target: 0, current: 0, velocity: 0 })
+  const [dpr, setDpr] = useState(1.25)
 
   useScrollProgress(scroller, scroll)
 
   return (
     <>
-      <Canvas camera={{ position: [0, 0, 9], fov: 45 }} dpr={[1, 2]} gl={{ antialias: false }}>
+      <Canvas camera={{ position: [0, 0, 9], fov: 45 }} dpr={dpr} gl={{ antialias: false }}>
         <color attach="background" args={['#07080c']} />
+        <AdaptiveQuality onChange={setDpr} />
         <Scene scroll={scroll} cardRefs={cardRefs} />
       </Canvas>
 
@@ -138,7 +157,7 @@ function App() {
         </div>
         <div className="hud-row hud-bottom">
           <span className="dim">scroll → · wheel, trackpad, arrows, touch</span>
-          <span className="dim">structure still · flow moves</span>
+          <span className="dim">dpr {dpr.toFixed(2)} · auto</span>
         </div>
       </div>
 

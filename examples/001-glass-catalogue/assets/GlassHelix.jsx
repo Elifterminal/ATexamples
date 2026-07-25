@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { Lightformer, MeshTransmissionMaterial } from '@react-three/drei'
@@ -25,7 +25,7 @@ export function HelixLights() {
   )
 }
 
-export function GlassHelix() {
+export function GlassHelix({ quality }) {
   const group = useRef()
 
   const { length, radius, turns, tube, spin } = useControls('helix · form', {
@@ -83,6 +83,11 @@ export function GlassHelix() {
     [radius, length, turns, tube, flow.coreScale],
   )
 
+  // useMemo replaces the geometry but never frees the old one, so every slider
+  // drag leaked a buffer on the GPU until the tab was closed.
+  useEffect(() => () => geometry.dispose(), [geometry])
+  useEffect(() => () => coreGeometry.dispose(), [coreGeometry])
+
   useFrame((_, delta) => {
     if (!group.current) return
 
@@ -104,7 +109,12 @@ export function GlassHelix() {
       </mesh>
 
       <mesh geometry={geometry}>
-        <MeshTransmissionMaterial samples={4} resolution={512} transmission={1} {...glass} />
+        <MeshTransmissionMaterial
+          samples={quality.samples}
+          resolution={quality.resolution}
+          transmission={1}
+          {...glass}
+        />
       </mesh>
 
       <HelixParticles
