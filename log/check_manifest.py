@@ -135,12 +135,19 @@ if page_path.exists():
 
 if not page_path.exists():
     err("public/log/index.html does not exist — run `npm run log`")
+elif errors:
+    # A manifest that fails the checks above cannot generate a page, and letting
+    # the generator raise here would bury the errors that actually explain why.
+    warnings.append("skipped the page-sync check — fix the errors below first")
 else:
     sys.path.insert(0, str(ROOT))
     import gen_log  # noqa: E402
 
-    if gen_log.build() != page_path.read_text():
-        err("public/log/index.html is out of date or was hand-edited — run `npm run log`")
+    try:
+        if gen_log.build() != page_path.read_text():
+            err("public/log/index.html is out of date or was hand-edited — run `npm run log`")
+    except Exception as exc:
+        err(f"the generator crashed on this manifest: {exc!r}")
 
 # ---- soft checks ----------------------------------------------------------
 
