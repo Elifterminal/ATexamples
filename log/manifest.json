@@ -56,6 +56,12 @@
       "rule": "Check shader geometry numerically, not just by eye.",
       "why": "A still frame cannot show orbit, containment or wrap, and those are exactly the properties that go quietly wrong. Re-run the shader maths on the CPU and assert the population-level claims. It is cheap, it runs without a GPU, and here it caught particles rendering inside the glass after the picture had already been signed off four times.",
       "from": "L-18"
+    },
+    {
+      "id": "R-08",
+      "rule": "One light direction, exported from one place.",
+      "why": "Every part of a scene that draws a pixel has to agree about where the light is — the environment, the lamps, any baked vertex shading, and every particle shader. Four separate answers is how a scene ends up looking lit from nowhere. Elevation and azimuth on sliders, one vector derived from them, consumed everywhere.",
+      "from": "L-19"
     }
   ],
   "assets": [
@@ -268,7 +274,8 @@
         "card fade": "opacity, pointer-events and tabIndex all follow camera distance",
         "camera distance": "driven by aspect ratio",
         "visible span": "also scaled by aspect, clamp 0.4–1.0 — the portrait mitigation",
-        "tessellation": "segmentsPerTurn exposed — a long helix multiplies segments by turns"
+        "tessellation": "segmentsPerTurn exposed — a long helix multiplies segments by turns",
+        "lighting": "one direction (elevation/azimuth) shared by the environment, a directional lamp, the core's baked vertex shading and both particle shaders"
       },
       "revisions": [
         {
@@ -324,17 +331,28 @@
           ],
           "change": "The particle geometry here leaked on every count change — the same undisposed-useMemo bug that was found and fixed in the tube during the perf pass, still present one file over.",
           "why": "The original fix was applied where the bug was found rather than everywhere the pattern occurred, so it survived. Noticed only because the new veil needed the same disposal and the neighbouring file was open."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "fix",
+          "ask": "A-14",
+          "lessons": [
+            "L-19",
+            "L-20"
+          ],
+          "change": "Lighting pass across the whole scene. One shared direction on elevation/azimuth sliders now drives the environment strips, a directional lamp, half-lambert vertex colours baked into the luminous core, and the shading in both particle shaders. The underside fill dropped from 2.2 against a 4.5 key to a weak cold bounce; glass roughness up from 0.04 with clearcoat added, so the key returns as a travelling streak instead of a pinpoint.",
+          "why": "Lee called the whole thing flat, and it was — but not for the reason it looked like. The glass was fine. The scene was lit four separate ways that did not agree, and the strong underside fill removed the dark side that a form needs in order to read as a shape at all."
         }
       ]
     },
     {
       "id": "smoke-veil",
-      "name": "Veil",
+      "name": "Dust",
       "example": "002-scroll-helix",
       "born": "2026-07-28",
       "status": "active",
       "derived_from": "scroll-helix",
-      "line": "A sheath of very small particles orbiting the form's own long axis — coherent when driven, turbulent when let go.",
+      "line": "A sheath of very small motes orbiting the form's own long axis — coherent when driven, turbulent when let go, and occasionally catching the light.",
       "geometry": "40k points on a cylindrical shell around the X axis, positioned entirely in the vertex shader",
       "authored_geometry": 0,
       "made_of": "Stateless, on the same principle as the flow inside the tube: a particle's position is a pure function of its seed and four accumulators, so the whole veil costs four uniform writes a frame. Orbiting around the long axis rather than drifting past is what makes it cross in front of the glass and then behind it — the veil has to cross the form or it just sits beside it. About 30% of the particles orbit the opposite way so the cloud churns through itself instead of turning like a wheel. Scroll velocity feeds two separate accumulators: one adds swirl, the other drags the whole population along the axis, wrapped so it can never be emptied out.",
@@ -347,7 +365,9 @@
         "turbulence": "three out-of-phase sine terms, not curl noise — nobody can resolve a single path at this size, only the aggregate",
         "billow": "displaces the shell FRACTION, reflected at both ends, so radius cannot leave the sheath whatever the noise does",
         "sprite": "broad gaussian, exp(-d²×12) minus the value at the rim so the discard leaves no visible edge",
-        "wrap": "fract() on the axial coordinate, with the outer eighth at each end faded out to hide the seam"
+        "wrap": "fract() on the axial coordinate, with the outer eighth at each end faded out to hide the seam",
+        "lighting": "half-lambert against the shared light direction, ambient floor so the shadow side scatters rather than going dead black",
+        "sparkle": "facet term (half-vector, tightness 18) x per-particle flicker (sin^26) x a 14% reflective subset; a glinting mote also grows ~90%"
       },
       "revisions": [
         {
@@ -385,6 +405,24 @@
           "ask": "A-13",
           "change": "Fourteen knobs exposed — shell geometry, orbit rate and scroll surge, axial follow, counter-rotating fraction, turbulence, billow, wander, and how fast it settles after the scroll stops.",
           "why": "Whether this reads as smoke or as fine dust is a judgement nobody can make from a description, and it has to be made on a real GPU at full resolution. The defaults are a starting point, not an answer."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "rename",
+          "ask": "A-14",
+          "change": "Renamed from Veil to Dust after Lee judged it on real hardware: it reads as fine dust, not smoke. Kept as a deliberate choice rather than a failed one.",
+          "why": "It was built to be smoke and it is not smoke. Renaming it is the honest move and it also changes what to do next — dust is discrete motes that catch light individually, which is a thing to lean into rather than blur away. The asset id stays 'smoke-veil' because this log is a record of how it got here, not a tidy-up."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "feature",
+          "ask": "A-14",
+          "lessons": [
+            "L-21",
+            "L-22"
+          ],
+          "change": "Motes are lit by the shared light direction, and a subset of them sparkle. 14% are reflective at all; a half-vector facet term decides where a glint is possible and a per-particle flicker decides when, so roughly 98 of 40,000 are glinting at any instant, all on the lit side.",
+          "why": "Dust that does not catch the light is just noise on the frame. Splitting the sparkle into a 'where' and a 'when' is what stops it reading as the whole field blinking — verified numerically rather than by eye, because a still frame catches an arbitrary instant of an intermittent effect."
         }
       ]
     }
@@ -486,6 +524,14 @@
       "verbatim": "I need a particle smoke, very small paticles, that appear to surround the double helix and orbit it around the enteral axis of the helix, and as I scroll the smoke swirls around the outside of the helix and follows the scrolling. When not scrolling, it should become more random swirling, rom front to back and back to front, around the central axis of the double helix, as though the smoke is orbiting the double helix",
       "summary": "Asked for an orbiting particle veil around the scroll form — coherent and streaming while the scroll is driven, turbulent and wandering once it is let go.",
       "effect": "A new asset, Veil. The two-state behaviour is the whole spec and it is the part that had never been attempted here: everything before this was either always-moving or driven-only, never a form that changes character depending on whether it is being pushed.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-14",
+      "date": "2026-07-28",
+      "verbatim": "it reads as fine dust. So lets treat it as fine dust. Lets make some of the particles, occasionally sparkle, as if they are randomly catching light. And, lets fix the light for the entire thing, the double helix, the particles, everything, looks pretty flat. Lets say the light is coming from above, and it should reflect off the helixes as if it is coming from above, and the light should respect the contours of the shapes",
+      "summary": "Judged the veil as dust rather than smoke and reclassified it deliberately, then called the whole scene flat and asked for a single light from above that the whole form responds to.",
+      "effect": "The veil became Dust, with a sparkle. And a proper lighting pass: one shared direction driving the environment, a real lamp, the glass core's shading and both particle systems. The flatness was not a material problem — it was four things lit four different ways.",
       "kind": "direction"
     }
   ],
@@ -615,6 +661,34 @@
       "lesson": "Re-running a vertex shader on the CPU catches the geometry bugs a screenshot structurally cannot.",
       "detail": "Orbit, containment and wrap are claims about motion and about the whole population. A still frame shows one instant of a few thousand visible particles, so it cannot falsify any of them. Replicating the shader in about eighty lines and asserting the properties directly — minimum radius clears the glass, both spin directions exist, nothing escapes the span at any scroll distance, the axial distribution stays even — found two real bugs that had already survived four rounds of looking at pictures.",
       "from": "smoke-veil"
+    },
+    {
+      "id": "L-19",
+      "sign": "neg",
+      "lesson": "Four things lit four different ways average out to no light at all.",
+      "detail": "The scene looked flat and the instinct was to reach for the glass material. The glass was not the problem. The environment had its own rig, the luminous core was unlit, and both particle systems were flat colour with no notion of a light — and the particles cover most of the form. Nothing agreed about where the light was, so nothing read as lit. The fix was one shared direction, exported from one file, consumed by everything that draws a pixel. Lighting is a property of the scene, not of a material.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-20",
+      "sign": "neg",
+      "lesson": "A fill light at half the key's strength is what flatness is made of.",
+      "detail": "The original rig lit the form from above at 4.5 and from below at 2.2. With both sides lit there is no dark side, and without a dark side there is no shape — no amount of work on the surface recovers from it. The bounce is now weak and cold: enough that the underside does not read as a hole punched in the form, not enough to compete with the key. It is the single knob that decides whether the thing reads as lit or as merely glowing.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-21",
+      "sign": "pos",
+      "lesson": "Shading a particle field costs one dot product and does more for form than any material setting.",
+      "detail": "Each particle already knows its own direction out from the form's central axis — the flow inside the tube had that vector sitting in a variable, unused. One half-lambert against the shared light direction turns 62k flat specks into a surface that has a top and a bottom. Particles are usually treated as an effect layered over the form; at this density they ARE the form, and lighting them is the cheapest structural improvement available.",
+      "from": "smoke-veil"
+    },
+    {
+      "id": "L-22",
+      "sign": "pos",
+      "lesson": "A convincing sparkle needs a where and a when, multiplied.",
+      "detail": "Flickering particles on a timer reads as the whole field blinking. Splitting it in two fixes it: a half-vector term decides WHERE a glint is geometrically possible, and a per-particle flicker decides WHEN it fires. Multiplied, glints cluster in the band actually facing the light and only a fraction fire at once — measured at ~98 of 40,000 at any instant, all of them on the lit side. Only 14% of motes are reflective at all, and a glinting mote also grows slightly, which turns out to be most of what sells it.",
+      "from": "smoke-veil"
     }
   ],
   "perf_levers": [
@@ -690,15 +764,15 @@
       "why": "Procedural work has a look. A great deal of it is technically extraordinary and completely anonymous — it reads as a shader demo. The gap between that and something that reads as a place built with intent is composition and restraint, and no amount of craft in this log closes it."
     },
     {
-      "id": "Q-09",
-      "q": "Whether the veil reads as smoke or as fine dust on real hardware.",
-      "why": "It is built and it is contained, but the judgement it was asked for — does this look like smoke — has only ever been made against a CPU-rendered frame at 640×400. Density and sprite size are exactly the things that resolution changes. Unanswered until someone looks at it on a GPU."
-    },
-    {
       "id": "Q-10",
       "q": "What 40k additional soft additive points cost.",
       "why": "They are cheap per vertex and the maths is trivial, but they are large soft sprites and the overdraw is real. Same problem as everything else here: it cannot be measured from the build environment, so the count sits on a slider and the stats panel is the only evidence.",
       "blocks": "L-13"
+    },
+    {
+      "id": "Q-11",
+      "q": "Whether the key is too hot at the default.",
+      "why": "The specular streak reads clearly as light from above, which was the ask, but it blows close to white on the upper faces and the form underneath it is a saturated magenta. That may be exactly right or it may look pasted on — it is a judgement about the picture, and it has only been seen through a CPU-rendered frame at 640x400."
     }
   ]
 }

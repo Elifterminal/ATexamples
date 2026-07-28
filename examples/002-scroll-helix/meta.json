@@ -10,7 +10,10 @@
     "bloom",
     "vignette",
     "particle-orbit",
-    "two-state-motion"
+    "two-state-motion",
+    "lighting",
+    "sparkle",
+    "half-lambert"
   ],
   "interaction": "horizontal scroll",
   "stack": [
@@ -23,5 +26,5 @@
   "difficulty": 3,
   "reusable_as": "full-site scroll shell",
   "date": "2026-07-24",
-  "notes": "The capability test for scroll-driven navigation. Horizontal scroll moves a camera along a static glass helix; particles inside drift on their own and surge with scroll velocity. Cards are real DOM anchors positioned by projecting world coordinates. Tests the responsive strategy — normalised progress, aspect-driven camera distance — and the hide-the-seams principle. A later addition, the veil, orbits very small particles around the form's long axis — coherent and streaming under scroll, turbulent and wandering at rest."
+  "notes": "The capability test for scroll-driven navigation. Horizontal scroll moves a camera along a static glass helix; particles inside drift on their own and surge with scroll velocity. Cards are real DOM anchors positioned by projecting world coordinates. Tests the responsive strategy — normalised progress, aspect-driven camera distance — and the hide-the-seams principle. A later addition, the dust, orbits very small motes around the form's long axis — coherent and streaming under scroll, turbulent and wandering at rest, with a subset that catches the light. Lit from one shared direction consumed by the environment, a lamp, the core's baked vertex shading and both particle shaders."
 }

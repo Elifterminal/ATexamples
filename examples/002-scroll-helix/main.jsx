@@ -6,8 +6,9 @@ import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { Leva, useControls } from 'leva'
 import { HelixLights, HelixTube } from './scene/HelixTube.jsx'
 import { HelixParticles } from './scene/HelixParticles.jsx'
-import { SmokeVeil } from './scene/SmokeVeil.jsx'
+import { DustVeil } from './scene/DustVeil.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
+import { KEY, useLightDirection } from './scene/lighting.js'
 import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
 import { useScrollProgress } from './scene/useScrollProgress.js'
 import './style.css'
@@ -29,6 +30,26 @@ const CARDS = [
 ]
 
 function Scene({ scroll, cardRefs }) {
+  // One light, agreed on by everything in the frame. Elevation and azimuth in
+  // degrees because those are the two worth dragging; 90 is straight overhead.
+  // The scene was previously lit four separate ways, which is why it read flat —
+  // the environment, the core and both particle systems each had their own idea
+  // of where the light was, and the average of four disagreeing lights is no
+  // light at all.
+  const light = useControls('light', {
+    elevation: { value: 66, min: 0, max: 90, step: 1 },
+    azimuth: { value: 18, min: -180, max: 180, step: 1 },
+    key: { value: 7, min: 0, max: 25, step: 0.1 },
+    lamp: { value: 2.4, min: 0, max: 10, step: 0.05 },
+    bounce: { value: 0.35, min: 0, max: 4, step: 0.05 },
+    ambient: { value: 0.16, min: 0, max: 1, step: 0.01 },
+    contrast: { value: 1.9, min: 0.4, max: 6, step: 0.05 },
+    roughness: { value: 0.1, min: 0.01, max: 0.6, step: 0.005 },
+    clearcoat: { value: 0.65, min: 0, max: 1, step: 0.01 },
+  })
+
+  const direction = useLightDirection(light.elevation, light.azimuth)
+
   const form = useControls('helix', {
     radius: { value: 1.15, min: 0.2, max: 4, step: 0.05 },
     tube: { value: 0.3, min: 0.02, max: 0.9, step: 0.005 },
@@ -58,16 +79,18 @@ function Scene({ scroll, cardRefs }) {
     surge: { value: 0.9, min: 0, max: 6, step: 0.05 },
   })
 
+  // Built as smoke, came out as fine dust, so it is dust now — discrete motes
+  // that catch the light individually rather than a continuous haze.
   // inner and shell are multiples of the glass's outer surface (radius + tube),
   // not world units, so the veil keeps its clearance when either of those
   // sliders moves instead of being swallowed by the form. inner 1.0 sits exactly
   // on the glass; the sheath spans inner → inner + shell.
-  const smoke = useControls('smoke', {
+  const dust = useControls('dust', {
     count: { value: 40000, min: 0, max: 120000, step: 500 },
     colour: '#9db4d6',
     // Below about 1.4 here the points land under a pixel, clamp to a hard dot,
     // and the soft falloff in the fragment shader never gets to run — the veil
-    // reads as a starfield instead of smoke. Small means small against the form,
+    // reads as a starfield rather than as motes. Small means small against the form,
     // not sub-pixel.
     opacity: { value: 0.22, min: 0, max: 1.5, step: 0.005 },
     size: { value: 2.2, min: 0.4, max: 12, step: 0.05 },
@@ -83,6 +106,18 @@ function Scene({ scroll, cardRefs }) {
     settle: { value: 1.6, min: 0.2, max: 10, step: 0.1 },
   })
 
+  // A mote glints when its facet lines up with the light. `fraction` is how many
+  // motes are reflective at all, `tightness` how narrowly aligned they must be,
+  // `rate` how often each one fires. Low fraction with high tightness reads as
+  // real specks catching the light; high fraction with low tightness reads as
+  // the whole field blinking.
+  const glint = useControls('sparkle', {
+    sparkle: { value: 0.85, min: 0, max: 4, step: 0.01 },
+    fraction: { value: 0.14, min: 0, max: 1, step: 0.01 },
+    rate: { value: 1.5, min: 0.1, max: 8, step: 0.05 },
+    tightness: { value: 18, min: 1, max: 80, step: 1 },
+  })
+
   return (
     <>
       <ScrollRig
@@ -95,8 +130,18 @@ function Scene({ scroll, cardRefs }) {
       />
 
       <Environment resolution={256}>
-        <HelixLights span={26} />
+        <HelixLights span={26} direction={direction} keyIntensity={light.key} bounce={light.bounce} />
       </Environment>
+
+      {/* The environment gives the glass something to reflect; this gives it a
+          highlight with a position. Reflection alone moves with the surface but
+          never says where the source is — the lamp is what makes the top of the
+          tube read as the top. */}
+      <directionalLight
+        position={[direction.x * 12, direction.y * 12, direction.z * 12]}
+        intensity={light.lamp}
+        color={KEY}
+      />
 
       <HelixTube
         radius={form.radius}
@@ -108,6 +153,10 @@ function Scene({ scroll, cardRefs }) {
         coreScale={flow.coreScale}
         resolution={perf.transmissionRes}
         segmentsPerTurn={perf.segmentsPerTurn}
+        direction={direction}
+        ambient={light.ambient}
+        roughness={light.roughness}
+        clearcoat={light.clearcoat}
       />
 
       <HelixParticles
@@ -122,27 +171,37 @@ function Scene({ scroll, cardRefs }) {
         drift={flow.drift}
         surge={flow.surge}
         scroll={scroll}
+        direction={direction}
+        ambient={light.ambient}
+        contrast={light.contrast}
       />
 
-      <SmokeVeil
-        count={smoke.count}
+      <DustVeil
+        count={dust.count}
         span={LENGTH}
         radius={form.radius}
         tube={form.tube}
-        inner={smoke.inner}
-        shell={smoke.shell}
-        counter={smoke.counter}
-        colour={smoke.colour}
-        opacity={smoke.opacity}
-        size={smoke.size}
-        orbit={smoke.orbit}
-        orbitSurge={smoke.orbitSurge}
-        follow={smoke.follow}
-        turbulence={smoke.turbulence}
-        billow={smoke.billow}
-        wander={smoke.wander}
-        settle={smoke.settle}
+        inner={dust.inner}
+        shell={dust.shell}
+        counter={dust.counter}
+        colour={dust.colour}
+        opacity={dust.opacity}
+        size={dust.size}
+        orbit={dust.orbit}
+        orbitSurge={dust.orbitSurge}
+        follow={dust.follow}
+        turbulence={dust.turbulence}
+        billow={dust.billow}
+        wander={dust.wander}
+        settle={dust.settle}
         scroll={scroll}
+        direction={direction}
+        ambient={light.ambient}
+        contrast={light.contrast}
+        sparkle={glint.sparkle}
+        sparkleFraction={glint.fraction}
+        sparkleRate={glint.rate}
+        sparkleTightness={glint.tightness}
       />
 
       {/* Default multisampling is 8. Dropping it is one of the largest single

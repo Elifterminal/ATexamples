@@ -12,6 +12,9 @@ const VERTEX = /* glsl */ `
   uniform float uBore;
   uniform float uSize;
   uniform float uPixelRatio;
+  uniform vec3 uLightDir;
+  uniform float uAmbient;
+  uniform float uContrast;
 
   attribute float aT;
   attribute float aSpeed;
@@ -20,6 +23,7 @@ const VERTEX = /* glsl */ `
   attribute vec2 aRadial;
 
   varying float vBright;
+  varying float vLight;
 
   const float TAU = 6.283185307179586;
 
@@ -42,6 +46,14 @@ const VERTEX = /* glsl */ `
 
     vBright = smoothstep(0.0, 0.03, t) * smoothstep(1.0, 0.97, t);
 
+    // normal already points from the helix's central axis out through this
+    // particle, so it doubles as the surface normal for lighting: particles on
+    // the upper coils face the key and the ones underneath fall away. This is
+    // most of what makes the form read as top-lit — there are 22k of these and
+    // they cover the glass.
+    float lam = dot(normal, uLightDir) * 0.5 + 0.5;
+    vLight = uAmbient + (1.0 - uAmbient) * pow(lam, uContrast);
+
     gl_PointSize = uSize * aSize * uPixelRatio * (12.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
@@ -52,6 +64,7 @@ const FRAGMENT = /* glsl */ `
   uniform float uIntensity;
 
   varying float vBright;
+  varying float vLight;
 
   void main() {
     float d = length(gl_PointCoord - vec2(0.5));
@@ -60,7 +73,7 @@ const FRAGMENT = /* glsl */ `
     float core = smoothstep(0.5, 0.0, d);
     float halo = smoothstep(0.5, 0.12, d);
 
-    gl_FragColor = vec4(uColor * (core * core * 2.2 + halo * 0.45) * uIntensity * vBright, core * vBright);
+    gl_FragColor = vec4(uColor * (core * core * 2.2 + halo * 0.45) * uIntensity * vBright * vLight, core * vBright);
   }
 `
 
@@ -90,6 +103,9 @@ export function HelixParticles({
   drift,
   surge,
   scroll,
+  direction,
+  ambient,
+  contrast,
 }) {
   const material = useRef()
   const flow = useRef(0)
@@ -145,6 +161,9 @@ export function HelixParticles({
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
       uColor: { value: new THREE.Color(colour) },
       uIntensity: { value: intensity },
+      uLightDir: { value: direction.clone() },
+      uAmbient: { value: ambient },
+      uContrast: { value: contrast },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -169,6 +188,9 @@ export function HelixParticles({
     u.uSize.value = size
     u.uIntensity.value = intensity
     u.uColor.value.set(colour)
+    u.uLightDir.value.copy(direction)
+    u.uAmbient.value = ambient
+    u.uContrast.value = contrast
   })
 
   return (

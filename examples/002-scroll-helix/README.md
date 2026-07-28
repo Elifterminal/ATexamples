@@ -2,7 +2,7 @@
 
 The capability test for scroll-driven navigation — the last real unknown before committing to a concept.
 
-Horizontal scroll moves a camera along a static glass helix. The particles inside drift on their own and surge with scroll velocity. A veil of very small particles orbits the outside. Cards are real DOM anchors positioned by projecting world coordinates every frame.
+Horizontal scroll moves a camera along a static glass helix. The particles inside drift on their own and surge with scroll velocity. A veil of very small motes orbits the outside, catching the light now and then. Cards are real DOM anchors positioned by projecting world coordinates every frame.
 
 Scroll with a wheel, trackpad, arrow keys, page up/down, home/end, or touch.
 
@@ -28,9 +28,9 @@ That improves portrait from broken to acceptable. It does not make it good. A ho
 
 **Ordering matters for a full-screen scroll proxy.** The scroll surface sits over the canvas to catch gestures, and in the first version it also sat over the cards and swallowed every click. The scroller has to come before the interactive layers in the DOM. The wheel listener lives on `window` rather than the scroller for the same reason — otherwise the wheel stops working whenever the cursor is over a card.
 
-## The veil
+## The dust
 
-A second particle system, added later, orbiting the outside of the glass rather than running through the inside of it. It has two states and the contrast between them is the point: while the scroll is moving it streams and stays coherent, and once you let go it breaks up and wanders. A `calm` term eased toward `1 - min(1, |velocity| * 2.5)` multiplies every turbulence term, so the transition arrives over about half a second instead of switching on the frame the wheel stops.
+A second particle system, added later, orbiting the outside of the glass rather than running through the inside of it. It was built as smoke and it came out as fine dust, so it is dust now — that's a deliberate reclassification rather than a failed attempt, and it changes what to do with it: dust is discrete motes that catch light individually, which is worth leaning into rather than blurring away. It has two states and the contrast between them is the point: while the scroll is moving it streams and stays coherent, and once you let go it breaks up and wanders. A `calm` term eased toward `1 - min(1, |velocity| * 2.5)` multiplies every turbulence term, so the transition arrives over about half a second instead of switching on the frame the wheel stops.
 
 Orbiting the form's **long axis** is what makes it work. Particles cross in front of the glass and then behind it, which is what sells a volume around the object — drift them past it instead and they read as a layer beside it. Depth testing stays on for the same reason: the tube has to be able to hide what's behind it.
 
@@ -44,13 +44,43 @@ Three things went wrong that are worth keeping:
 
 None of those three were visible in a still frame — all were found by re-running the vertex shader on the CPU and asserting the properties directly: minimum radius clears the glass, both spin directions exist, nothing escapes the span at any scroll distance, the axial distribution stays even after drifting. That check costs about eighty lines and needs no GPU.
 
-Whether it reads as *smoke* or as *fine dust* is still open. It has only been looked at through a CPU-rendered frame at 640×400, and density and sprite size are exactly what resolution changes. The knobs are all in `smoke`.
+### The sparkle
+
+A convincing glint needs a **where** and a **when**, multiplied. A half-vector facet term decides where a glint is geometrically possible; a per-particle flicker decides when it fires. On their own, either one reads as the whole field blinking on a timer. Together, glints cluster in the band that actually faces the key and only a handful fire at once — measured at roughly 98 of 40,000 at any instant, all of them on the lit side of the axis. Only 14% of motes are reflective at all, and a glinting mote also grows about 90%, which turns out to be most of what sells it as catching light rather than merely brightening.
+
+That was verified numerically, not by eye — a still frame catches one arbitrary instant of an intermittent effect, so it can neither confirm nor refute it.
+
+Knobs are in `dust` and `sparkle`.
+
+## Lighting
+
+The whole scene was flat, and the instinct — reach for the glass material — was wrong. The glass was fine. **The scene was lit four separate ways that didn't agree**: the environment had its own rig, the luminous core was drawn unlit, and both particle systems were flat colour with no notion of a light at all. Nothing agreed about where the light was, so nothing read as lit.
+
+`scene/lighting.js` now exports **one direction**, from elevation and azimuth sliders, and everything that draws a pixel consumes it:
+
+| what | how it uses the direction |
+|---|---|
+| environment strips | key positioned along it, so moving the light moves the reflection in the glass |
+| directional lamp | gives the highlight a *position* — reflection alone moves with the surface but never says where the source is |
+| luminous core | half-lambert baked into vertex colours at build time; stays emissive, but gains a top and a bottom |
+| both particle systems | half-lambert against each particle's own outward direction from the central axis |
+
+Two things mattered more than expected:
+
+**The fill light was most of the flatness.** The original rig lit from above at 4.5 and from below at 2.2. With both sides lit there is no dark side, and without a dark side there is no shape. The bounce is now weak and cold — enough that the underside doesn't read as a hole punched in the form, not enough to compete. It's the single knob that decides whether the thing reads as lit or as merely glowing; push it past about 1 and the shape flattens out again.
+
+**Shading the particles cost one dot product and did more than any material setting.** Each particle already knows its direction out from the central axis — the flow inside the tube had that vector sitting in a variable, unused. Particles are usually thought of as an effect layered over a form, but at 62k they *are* the form, and lighting them is the cheapest structural improvement available.
+
+Glass roughness went from 0.04 to 0.1 with a clearcoat on top: mirror-smooth returns the key as a pinpoint the eye reads as a speck, and a little roughness spreads it into the travelling streak a pipe wants.
+
+**Still open:** whether the key is too hot at the default. The streak reads clearly as light from above, which was the ask, but it blows close to white against a saturated magenta form. That's a judgement about the picture, and it has only been seen through a CPU-rendered frame at 640×400.
 
 ## Seams, and where they hide
 
 - **The helix's ends** — the form is 60 units long and the camera only travels 42, so the termini are never in frame. Nothing whole is visible, so nothing can be cropped wrong.
 - **Card arrival** — opacity ramps with camera distance; `pointer-events` and `tabIndex` follow it, so a faded card isn't a click or tab target.
 - **Section boundaries** — there are none. One camera, one continuous object.
+- **The light** — one direction, shared. Four rigs that disagree is its own kind of seam, and the least visible one until you notice everything looks flat.
 - **Still open: the page transition.** Clicking a card here does a normal page load, which is the one seam still fully visible. Hiding it needs a persistent WebGL context with DOM swapping around it, and that's an architectural decision rather than a tweak.
 
 ## Performance
