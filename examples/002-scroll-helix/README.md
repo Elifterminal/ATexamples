@@ -62,7 +62,9 @@ The tumble is two angles advancing at unrelated per-plate rates, plus a slow flu
 
 Measured rather than guessed: a full turn takes about **38 seconds**, the fastest plate tumbles 12× the slowest, and roughly 11 of 220 plates are flashing at any instant, each lit about 2% of the time. Snow is slower than instinct suggests — the first guess was several times too fast.
 
-Iridescence is three offset cosines driven by the viewing angle. No texture, and because it's driven by angle rather than time the hue sweeps as the plate turns instead of every plate being the same colour at once. The shine term uses `abs(dot(normal, half))` — a flake is thin enough that either face can take the light, and without the `abs` it's dead half the time it should be flashing, for no reason a viewer could name.
+Iridescence is three offset cosines driven by the viewing angle. No texture, and because it's driven by angle rather than time the hue sweeps as the plate turns instead of every plate being the same colour at once.
+
+**Hue and flash are deliberately decoupled**, and that took a correction to arrive at. The first version drove colour from the flash alone, which meant a plate not currently catching the light had no colour — the field sat grey between flashes and only the few flashing plates were iridescent. The obvious fix, widening the flash until everything is always flashing, buys the colour back by destroying the event the flash exists to represent. So `iridBase` carries the tint independently: plates are iridescent all the time, and catching the light adds brightness on top. The shine term uses `abs(dot(normal, half))` — a flake is thin enough that either face can take the light, and without the `abs` it's dead half the time it should be flashing, for no reason a viewer could name.
 
 **One bug worth keeping:** building a local basis from the plate's normal with `cross(up, normal)` collapses to zero every time a plate points straight up — once per tumble, per plate, forever. The reference vector has to swap when the normal nears vertical. Checked rather than assumed: the smallest cross product over 400 simulated seconds is 0.31.
 

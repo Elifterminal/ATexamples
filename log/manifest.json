@@ -461,7 +461,7 @@
         "lighting": "lit by its own face, not by where it sits on the shell — a plate underneath with its face turned up really is catching the key",
         "edge-on": "alpha scales with how square-on the plate is to the viewer, so it thins to nothing sideways",
         "shine": "abs(dot(normal, half)) ^ 16 — abs because a flake is thin enough that either face can take the light",
-        "iridescence": "three offset cosines driven by the viewing angle; no texture, and the hue sweeps as the plate turns",
+        "iridescence": "three offset cosines driven by the viewing angle; carried at a base level at all times and pushed to full by a flash, so the colour does not depend on catching the light",
         "measured flash": "~11 of 220 plates flashing at any instant, each one lit ~2% of the time"
       },
       "revisions": [
@@ -486,6 +486,16 @@
           ],
           "change": "Pulled the orbital motion out of the dust into a shared module and rebuilt both systems on it, rather than copying the shader into the new one.",
           "why": "'They behave the same way as the dust' is a requirement. A copy satisfies it on the first day and breaks it silently the first time either is tuned — nothing errors, the two just stop agreeing. Sharing the code makes it structural."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "fix",
+          "ask": "A-16",
+          "lessons": [
+            "L-27"
+          ],
+          "change": "Split the hue from the flash. Colour was previously mixed in by the flash term alone, so between flashes the plates were grey and only the few currently catching the light had any iridescence at all. A base level now carries the tint independently and the flash adds brightness over it. Defaults raised with it: more plates, higher opacity, a wider flash.",
+          "why": "Lee preferred a render that had been over-driven purely to demonstrate the mechanism. The literal reading — widen the flash until everything flashes — would have bought the colour back by destroying the event the flash represents. The preference was pointing at the grey between flashes, which was a fault rather than a setting."
         }
       ]
     }
@@ -604,6 +614,14 @@
       "summary": "Asked for a third, rarer, much larger element in the sheath: flat hexagonal plates that tumble like falling snow and flash iridescent when a face catches the light.",
       "effect": "Flakes. Also forced the orbital motion out into a shared module — 'they behave the same way as the dust' is a requirement that two hand-kept copies would quietly break.",
       "kind": "direction"
+    },
+    {
+      "id": "A-16",
+      "date": "2026-07-28",
+      "verbatim": "One of the examples i saw was brighter than the other... i liked the brighter one more",
+      "summary": "Picked the deliberately over-driven test render over the tuned default, which surfaced a real flaw in how the plates were coloured rather than just a preference for brighter.",
+      "effect": "Hue and flash were decoupled. The plates now carry iridescence all the time and catching the light adds brightness on top, instead of the flash being the only source of colour.",
+      "kind": "taste"
     }
   ],
   "lessons": [
@@ -787,6 +805,13 @@
       "sign": "pos",
       "lesson": "Two incommensurate rates read as random; one rate reads as machinery.",
       "detail": "The tumble is two angles advancing at unrelated per-plate rates, plus a slow flutter term. Because the rates never share a period, the motion has no visible loop — which is most of what 'random' means to an eye watching for a few seconds. Measured: a full turn takes about 38 seconds and the fastest plate tumbles 12x the slowest. Snow is slower than instinct suggests; the first guess was several times too fast.",
+      "from": "hex-plates"
+    },
+    {
+      "id": "L-27",
+      "sign": "neg",
+      "lesson": "When a taste call points at an over-driven test render, find what it is actually pointing at.",
+      "detail": "A render made purely to prove a mechanism was preferred to the tuned default. Taking that literally would have meant widening the flash until every plate flashed constantly — which buys the colour back by destroying the event the flash exists to represent. The real fault was underneath: hue was driven by the flash, so a plate not currently catching the light had no colour at all and the field sat grey between flashes. Separating the two gives the brightness that was actually wanted and keeps the behaviour that was asked for a message earlier. A preference between two pictures is evidence about the pictures, not an instruction about the parameters that produced them.",
       "from": "hex-plates"
     }
   ],

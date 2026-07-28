@@ -91,6 +91,7 @@ const FRAGMENT = /* glsl */ `
   uniform float uShineTightness;
   uniform float uIridSpread;
   uniform float uIridShift;
+  uniform float uIridBase;
 
   varying float vFade;
   varying float vLight;
@@ -112,7 +113,15 @@ const FRAGMENT = /* glsl */ `
     // instead of every plate being the same colour at once.
     vec3 tint = iridescence(uIridShift + (1.0 - vFacing) * uIridSpread);
 
-    vec3 colour = mix(uBase, tint, clamp(flash * 1.4, 0.0, 1.0));
+    // Hue and flash are deliberately decoupled. Driving the colour from the
+    // flash alone was the first version, and it meant a plate not currently
+    // catching the light had no colour at all — the field sat grey and only the
+    // few flashing plates were iridescent. The obvious fix, widening the flash
+    // until everything is always flashing, buys the colour back by destroying
+    // the thing the flash is for. So uIridBase carries the tint independently:
+    // the plates are iridescent all the time, and catching the light adds
+    // brightness on top rather than being the only source of colour.
+    vec3 colour = mix(uBase, tint, clamp(uIridBase + flash * 1.4, 0.0, 1.0));
     float a = (vFacing * uOpacity * vLight + flash * uShine) * vFade;
 
     gl_FragColor = vec4(colour, a);
@@ -143,6 +152,7 @@ export function HexPlates({
   shineTightness,
   iridSpread,
   iridShift,
+  iridBase,
   scroll,
   direction,
   ambient,
@@ -227,6 +237,7 @@ export function HexPlates({
       uShineTightness: { value: shineTightness },
       uIridSpread: { value: iridSpread },
       uIridShift: { value: iridShift },
+      uIridBase: { value: iridBase },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -272,6 +283,7 @@ export function HexPlates({
     u.uShineTightness.value = shineTightness
     u.uIridSpread.value = iridSpread
     u.uIridShift.value = iridShift
+    u.uIridBase.value = iridBase
   })
 
   return (

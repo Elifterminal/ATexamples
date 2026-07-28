@@ -124,18 +124,22 @@ function Scene({ scroll, cardRefs }) {
   // plate can turn, and turning is what lets it catch the light and then vanish
   // edge-on. Keep `count` low: the whole point is that they're uncommon.
   const hex = useControls('hex', {
-    count: { value: 220, min: 0, max: 2000, step: 10 },
+    count: { value: 380, min: 0, max: 2000, step: 10 },
     size: { value: 0.3, min: 0.02, max: 1.5, step: 0.005 },
-    opacity: { value: 0.32, min: 0, max: 2, step: 0.01 },
+    opacity: { value: 0.5, min: 0, max: 2, step: 0.01 },
     base: '#7f93b8',
     inner: { value: 1.2, min: 1, max: 6, step: 0.02 },
     shell: { value: 1.5, min: 0.05, max: 8, step: 0.05 },
     tumble: { value: 0.35, min: 0, max: 4, step: 0.01 },
     flutter: { value: 0.55, min: 0, max: 3, step: 0.01 },
-    shine: { value: 1.3, min: 0, max: 6, step: 0.02 },
-    shineTightness: { value: 16, min: 1, max: 120, step: 1 },
-    iridSpread: { value: 1.1, min: 0, max: 3, step: 0.01 },
+    shine: { value: 2.2, min: 0, max: 6, step: 0.02 },
+    shineTightness: { value: 7, min: 1, max: 120, step: 1 },
+    iridSpread: { value: 1.5, min: 0, max: 3, step: 0.01 },
     iridShift: { value: 0.1, min: 0, max: 1, step: 0.01 },
+    // How much colour a plate carries when it ISN'T catching the light. At 0 the
+    // field sits grey between flashes; at 1 it's iridescent throughout and the
+    // flash only adds brightness.
+    iridBase: { value: 0.8, min: 0, max: 1, step: 0.01 },
   })
 
   return (
@@ -248,6 +252,7 @@ function Scene({ scroll, cardRefs }) {
         shineTightness={hex.shineTightness}
         iridSpread={hex.iridSpread}
         iridShift={hex.iridShift}
+        iridBase={hex.iridBase}
         scroll={scroll}
         direction={direction}
         ambient={light.ambient}
