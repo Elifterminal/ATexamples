@@ -6,6 +6,7 @@ import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { Leva, useControls } from 'leva'
 import { HelixLights, HelixTube } from './scene/HelixTube.jsx'
 import { HelixParticles } from './scene/HelixParticles.jsx'
+import { SmokeVeil } from './scene/SmokeVeil.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
 import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
 import { useScrollProgress } from './scene/useScrollProgress.js'
@@ -57,6 +58,31 @@ function Scene({ scroll, cardRefs }) {
     surge: { value: 0.9, min: 0, max: 6, step: 0.05 },
   })
 
+  // inner and shell are multiples of the glass's outer surface (radius + tube),
+  // not world units, so the veil keeps its clearance when either of those
+  // sliders moves instead of being swallowed by the form. inner 1.0 sits exactly
+  // on the glass; the sheath spans inner → inner + shell.
+  const smoke = useControls('smoke', {
+    count: { value: 40000, min: 0, max: 120000, step: 500 },
+    colour: '#9db4d6',
+    // Below about 1.4 here the points land under a pixel, clamp to a hard dot,
+    // and the soft falloff in the fragment shader never gets to run — the veil
+    // reads as a starfield instead of smoke. Small means small against the form,
+    // not sub-pixel.
+    opacity: { value: 0.22, min: 0, max: 1.5, step: 0.005 },
+    size: { value: 2.2, min: 0.4, max: 12, step: 0.05 },
+    inner: { value: 1.12, min: 1, max: 5, step: 0.02 },
+    shell: { value: 0.55, min: 0.05, max: 8, step: 0.05 },
+    orbit: { value: 0.35, min: 0, max: 3, step: 0.01 },
+    orbitSurge: { value: 2.2, min: 0, max: 12, step: 0.05 },
+    follow: { value: 0.4, min: -2, max: 2, step: 0.02 },
+    counter: { value: 0.3, min: 0, max: 0.5, step: 0.01 },
+    turbulence: { value: 0.9, min: 0, max: 4, step: 0.05 },
+    billow: { value: 0.22, min: 0, max: 1, step: 0.01 },
+    wander: { value: 0.9, min: 0, max: 6, step: 0.05 },
+    settle: { value: 1.6, min: 0.2, max: 10, step: 0.1 },
+  })
+
   return (
     <>
       <ScrollRig
@@ -95,6 +121,27 @@ function Scene({ scroll, cardRefs }) {
         intensity={flow.intensity}
         drift={flow.drift}
         surge={flow.surge}
+        scroll={scroll}
+      />
+
+      <SmokeVeil
+        count={smoke.count}
+        span={LENGTH}
+        radius={form.radius}
+        tube={form.tube}
+        inner={smoke.inner}
+        shell={smoke.shell}
+        counter={smoke.counter}
+        colour={smoke.colour}
+        opacity={smoke.opacity}
+        size={smoke.size}
+        orbit={smoke.orbit}
+        orbitSurge={smoke.orbitSurge}
+        follow={smoke.follow}
+        turbulence={smoke.turbulence}
+        billow={smoke.billow}
+        wander={smoke.wander}
+        settle={smoke.settle}
         scroll={scroll}
       />
 

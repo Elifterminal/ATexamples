@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 
@@ -127,6 +127,12 @@ export function HelixParticles({
 
     return geo
   }, [count, length])
+
+  // The tube's leak, still here. Dragging the count slider swapped the geometry
+  // and stranded the old buffers on the GPU — same bug, one file over, missed
+  // because the fix was applied where it was found rather than everywhere it
+  // applied.
+  useEffect(() => () => geometry.dispose(), [geometry])
 
   const uniforms = useMemo(
     () => ({

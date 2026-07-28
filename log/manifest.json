@@ -1,21 +1,22 @@
 {
   "_note": "Single source of truth for the asset log page. Nothing on public/log/index.html is hand-written — run `npm run log` to regenerate, `npm run log:check` to catch drift. Add a revision here, not in the HTML.",
-
   "page": {
     "title": "Asset Log",
     "sub": "An open notebook for a procedural WebGL study — building site-quality 3D forms out of formulas instead of models. Every asset here, how it was made, every time it changed, and who asked. Dead ends included.",
     "updated": "2026-07-28",
     "repo": "https://github.com/Elifterminal/ATexamples"
   },
-
   "premise": {
     "claim": "You can reach a convincing 3D asset without authoring any geometry, if the treatment carries it.",
     "status": "held",
     "settled": "2026-07-24",
     "scope": "One form at a time, centred, on a near-black background, in glass. Not yet tested on composed multi-element scenes, which is where it is expected to get hard.",
-    "evidence": ["glass-knot", "glass-eye", "glass-helix"]
+    "evidence": [
+      "glass-knot",
+      "glass-eye",
+      "glass-helix"
+    ]
   },
-
   "rules": [
     {
       "id": "R-01",
@@ -49,9 +50,14 @@
       "rule": "Instrument rather than guess on performance.",
       "why": "The browser these are built through renders on the CPU, so no framerate number from the build process would mean anything. So the page measures itself on whatever GPU it lands on, adapts its own pixel ratio, and exposes every expensive knob. The stats panel is the only real evidence.",
       "from": "L-13"
+    },
+    {
+      "id": "R-07",
+      "rule": "Check shader geometry numerically, not just by eye.",
+      "why": "A still frame cannot show orbit, containment or wrap, and those are exactly the properties that go quietly wrong. Re-run the shader maths on the CPU and assert the population-level claims. It is cheap, it runs without a GPU, and here it caught particles rendering inside the glass after the picture had already been signed off four times.",
+      "from": "L-18"
     }
   ],
-
   "assets": [
     {
       "id": "glass-knot",
@@ -99,7 +105,9 @@
         {
           "date": "2026-07-24",
           "kind": "fix",
-          "lessons": ["L-06"],
+          "lessons": [
+            "L-06"
+          ],
           "ask": "A-04",
           "change": "Scoped every Leva control folder per asset.",
           "why": "Leva persists control values by path, not by component lifetime, so remounting on a catalogue switch did not reset anything — and the per-asset defaults each entry carried were silently doing nothing. Noticed here because the Knot is the first asset the switcher lands on."
@@ -113,7 +121,6 @@
         }
       ]
     },
-
     {
       "id": "glass-eye",
       "name": "Ocellus",
@@ -143,34 +150,41 @@
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-01"],
+          "lessons": [
+            "L-01"
+          ],
           "change": "First version rendered almost entirely black.",
           "why": "Glass shows you what is behind it, and behind it was a dark interior on a dark background — so the transmission sphere absorbed everything. Fixed by making the iris emit its own light and thinning the orb. Adding more lights would not have worked; the problem was that there was nothing to see through to."
         },
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-03"],
+          "lessons": [
+            "L-03"
+          ],
           "change": "Iris fibres were originally a transmission material too, sitting inside the orb's transmission pass. Replaced with clearcoat + iridescence.",
           "why": "Each transmission material forces its own full-scene render. Nesting them tanked the frame hard enough that headless screenshots timed out. The fibres read as glass anyway, because the orb in front is doing the real refracting."
         },
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-02"],
+          "lessons": [
+            "L-02"
+          ],
           "change": "Opted out of the shared four-panel light rig; lit by its own round catchlights instead.",
           "why": "Big rectangular lightformers reflect off a sphere as literal grey rectangles and read as CG instantly. Circular formers are most of what makes an eye look wet. This is the revision that produced rule R-02."
         },
         {
           "date": "2026-07-24",
           "kind": "fix",
-          "lessons": ["L-07"],
+          "lessons": [
+            "L-07"
+          ],
           "change": "Fibre placement moved from Math.random to a seeded PRNG.",
           "why": "The asset was rolling a different arrangement on every refresh. You cannot art-direct a lottery — you would be tuning something that will not exist next reload."
         }
       ]
     },
-
     {
       "id": "glass-helix",
       "name": "Strand",
@@ -202,14 +216,18 @@
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-04"],
+          "lessons": [
+            "L-04"
+          ],
           "change": "The particle flow went through five versions before it worked. Bright and dense it swamped the glass and looked like glowing rope; small and sparse it looked like dirt in a tube.",
           "why": "The fix was structural rather than numeric, which is why four rounds of tuning numbers got nowhere. Real fluid has a luminous body, so there is now a dimmer inner tube of additive colour with the particles riding on top as detail. Particles alone read as dust."
         },
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-05"],
+          "lessons": [
+            "L-05"
+          ],
           "change": "At ior 1.44 the tube facets bent the particles behind them into hard diagonal bands that read as scales on a snake. Dropped the index.",
           "why": "Glass that refracts hard is beautiful over an empty background and ruinous over something you want to see. The lower index makes it behave like a clear shell rather than a lens."
         },
@@ -222,14 +240,15 @@
         {
           "date": "2026-07-24",
           "kind": "fix",
-          "lessons": ["L-14"],
+          "lessons": [
+            "L-14"
+          ],
           "ask": "A-11",
           "change": "Merged tube geometries are now disposed when parameters change.",
           "why": "They were rebuilt by useMemo on every parameter change and the old buffers were never freed, so dragging a slider leaked GPU memory until the tab was closed. A real bug, found while doing something else."
         }
       ]
     },
-
     {
       "id": "scroll-helix",
       "name": "Strand (scroll variant)",
@@ -256,14 +275,20 @@
           "date": "2026-07-24",
           "kind": "born",
           "ask": "A-10",
-          "lessons": ["L-08", "L-09", "L-10"],
+          "lessons": [
+            "L-08",
+            "L-09",
+            "L-10"
+          ],
           "change": "Built as the scroll capability test — the last real unknown before committing to a direction.",
           "why": "Four questions in order of doubt: does scroll-driven camera work in this stack, does 'alive at rest' actually feel different, can cards be real links, does the responsive strategy hold. Three came back clean on the first build; the fourth is the failure below."
         },
         {
           "date": "2026-07-24",
           "kind": "failure",
-          "lessons": ["L-11"],
+          "lessons": [
+            "L-11"
+          ],
           "ask": "A-08",
           "change": "First version computed camera distance so a chosen world-width always fit the frame. Correct on desktop; on portrait it pushed the camera so far back the helix became a thread in a void. Mitigated by scaling the visible span with aspect too.",
           "why": "Technically correct framing, visually dead. The mitigation takes portrait from broken to acceptable, NOT to good — a horizontal form in a tall frame wastes most of the screen however it is scaled. The honest fix is a rotated vertical variant designed as its own composition, and it is not built. This is the most useful negative result in the log."
@@ -271,7 +296,9 @@
         {
           "date": "2026-07-24",
           "kind": "fix",
-          "lessons": ["L-12"],
+          "lessons": [
+            "L-12"
+          ],
           "change": "Moved the full-screen scroll proxy before the interactive layers in the DOM, and put the wheel listener on window rather than on the scroller.",
           "why": "The proxy sat over the cards and swallowed every click. And with the listener on the scroller, scrolling died whenever the cursor was over a card."
         },
@@ -281,11 +308,87 @@
           "ask": "A-11",
           "change": "Adaptive pixel ratio (0.75–2.0) via a performance monitor, replacing a fixed [1, 2]. Tube tessellation exposed. Live stats panel behind perf → stats.",
           "why": "Cost scales with the square of pixel ratio, so 2.0 → 1.5 is 44% fewer pixels shaded. The ratio walks itself up when frames are cheap and down when they are not, so a big desktop GPU and a laptop integrated chip both land somewhere sensible without a device check."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "feature",
+          "ask": "A-13",
+          "change": "Gained a second particle system orbiting outside the glass. The form itself is unchanged.",
+          "why": "The scroll velocity that already drove the flow inside the tube turned out to be enough to drive something outside it too, in a different way — the same input reused rather than a new one added."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "fix",
+          "lessons": [
+            "L-14"
+          ],
+          "change": "The particle geometry here leaked on every count change — the same undisposed-useMemo bug that was found and fixed in the tube during the perf pass, still present one file over.",
+          "why": "The original fix was applied where the bug was found rather than everywhere the pattern occurred, so it survived. Noticed only because the new veil needed the same disposal and the neighbouring file was open."
+        }
+      ]
+    },
+    {
+      "id": "smoke-veil",
+      "name": "Veil",
+      "example": "002-scroll-helix",
+      "born": "2026-07-28",
+      "status": "active",
+      "derived_from": "scroll-helix",
+      "line": "A sheath of very small particles orbiting the form's own long axis — coherent when driven, turbulent when let go.",
+      "geometry": "40k points on a cylindrical shell around the X axis, positioned entirely in the vertex shader",
+      "authored_geometry": 0,
+      "made_of": "Stateless, on the same principle as the flow inside the tube: a particle's position is a pure function of its seed and four accumulators, so the whole veil costs four uniform writes a frame. Orbiting around the long axis rather than drifting past is what makes it cross in front of the glass and then behind it — the veil has to cross the form or it just sits beside it. About 30% of the particles orbit the opposite way so the cloud churns through itself instead of turning like a wheel. Scroll velocity feeds two separate accumulators: one adds swirl, the other drags the whole population along the axis, wrapped so it can never be emptied out.",
+      "recipe": {
+        "shell": "inner and depth both expressed as multiples of the glass's OUTER surface (radius + tube), never the centreline",
+        "radial bias": "shell fraction ** 1.6 — densest against the glass, thinning outward",
+        "orbit": "phase += delta × (orbit + |scrollVelocity| × orbitSurge); never zero",
+        "axial drag": "drift += delta × scrollVelocity × follow, signed, per-particle drag 0.55–1.45 so it shears instead of sliding as a block",
+        "two states": "a calm term eased toward 1 - min(1, |velocity| × 2.5); every turbulence term is multiplied by it",
+        "turbulence": "three out-of-phase sine terms, not curl noise — nobody can resolve a single path at this size, only the aggregate",
+        "billow": "displaces the shell FRACTION, reflected at both ends, so radius cannot leave the sheath whatever the noise does",
+        "sprite": "broad gaussian, exp(-d²×12) minus the value at the rim so the discard leaves no visible edge",
+        "wrap": "fract() on the axial coordinate, with the outer eighth at each end faded out to hide the seam"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-28",
+          "kind": "born",
+          "ask": "A-13",
+          "change": "Built as a second particle system around the scroll form, orbiting the long axis, with the two-state behaviour the ask describes: streaming and coherent under scroll, turbulent and wandering at rest.",
+          "why": "Everything in the study so far was either always-moving or driven-only. A form whose character depends on whether it is currently being pushed is a different thing, and it is the first time the scroll input has been used for anything other than speed."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "failure",
+          "ask": "A-13",
+          "lessons": [
+            "L-15",
+            "L-16"
+          ],
+          "change": "First version read as a starfield rather than smoke. Two causes: the default size put every point at about a quarter of a pixel, so it clamped to a hard dot and the soft falloff never ran; and the falloff was cubed, which concentrated the alpha into the sprite centre where the bloom pass then picked it out as a spark.",
+          "why": "Both came from taking “very small particles” literally in world units without working out what it meant in pixels at the camera distance the scene actually uses. Recorded because the picture looked deliberate — an even field of fine points is a plausible-looking wrong answer, which is the kind that survives review."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "failure",
+          "ask": "A-13",
+          "lessons": [
+            "L-17",
+            "L-18"
+          ],
+          "change": "The veil was rendering partly inside the glass. Its inner radius was a multiple of the helix centreline radius and ignored the tube's own thickness, putting the floor 0.13 units inside the wall; the billow term then scaled that radius and could push a particle a further 22% inward, down to 1.03 against a wall at 1.45. Fixed by measuring clearance from radius + tube, and by making billow displace the shell fraction — reflected at both ends — so the radius is structurally unable to leave the sheath.",
+          "why": "Neither bug was visible in a still frame, and four rounds of looking at screenshots had already passed them. They were found by re-running the vertex shader on the CPU and asserting the properties directly. The containment is now a property of how the radius is constructed rather than something the noise settings have to be careful not to break."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "feature",
+          "ask": "A-13",
+          "change": "Fourteen knobs exposed — shell geometry, orbit rate and scroll surge, axial follow, counter-rotating fraction, turbulence, billow, wander, and how fast it settles after the scroll stops.",
+          "why": "Whether this reads as smoke or as fine dust is a judgement nobody can make from a description, and it has to be made on a real GPU at full resolution. The defaults are a starting point, not an answer."
         }
       ]
     }
   ],
-
   "asks": [
     {
       "id": "A-01",
@@ -376,9 +479,16 @@
       "summary": "Asked for this page — a living log of the assets, how they were made, how they changed, and the asks that changed them.",
       "effect": "This document. Generated from a manifest so it cannot quietly go stale, and the protocol for keeping it current is now a standing rule of the project rather than something to remember.",
       "kind": "direction"
+    },
+    {
+      "id": "A-13",
+      "date": "2026-07-28",
+      "verbatim": "I need a particle smoke, very small paticles, that appear to surround the double helix and orbit it around the enteral axis of the helix, and as I scroll the smoke swirls around the outside of the helix and follows the scrolling. When not scrolling, it should become more random swirling, rom front to back and back to front, around the central axis of the double helix, as though the smoke is orbiting the double helix",
+      "summary": "Asked for an orbiting particle veil around the scroll form — coherent and streaming while the scroll is driven, turbulent and wandering once it is let go.",
+      "effect": "A new asset, Veil. The two-state behaviour is the whole spec and it is the part that had never been attempted here: everything before this was either always-moving or driven-only, never a form that changes character depending on whether it is being pushed.",
+      "kind": "direction"
     }
   ],
-
   "lessons": [
     {
       "id": "L-01",
@@ -477,16 +587,66 @@
       "lesson": "Geometry rebuilt in useMemo leaks unless the previous buffer is disposed.",
       "detail": "The merged tube geometries were rebuilt on every parameter change and never freed, so dragging a slider leaked GPU memory until the tab closed. Found incidentally during the perf pass, which is usually how this kind of thing surfaces.",
       "from": "glass-helix"
+    },
+    {
+      "id": "L-15",
+      "sign": "neg",
+      "lesson": "“Very small” in world units became sub-pixel on screen, and a sub-pixel point is not a small particle — it is a hard dot.",
+      "detail": "The first size default put every particle at roughly a quarter of a pixel. WebGL clamps a point to one pixel, so the soft falloff written into the fragment shader never got to run at all and the veil rendered as a starfield. The fix was arithmetic, not taste: work out the on-screen pixel size at the camera distance the scene actually uses before choosing the default. Small has to mean small against the form, not smaller than a pixel.",
+      "from": "smoke-veil"
+    },
+    {
+      "id": "L-16",
+      "sign": "neg",
+      "lesson": "A peaked alpha falloff plus a bloom threshold turns a particle field into a sparkle field.",
+      "detail": "Cubing the falloff concentrated nearly all the alpha into the middle few pixels of each sprite. Individually those centres cleared the bloom threshold and got picked out as points of light, which is the opposite of smoke. A broad flat gaussian keeps every particle under the threshold on its own and only brightens where several overlap — accumulation is what reads as smoke, not the individual sprite.",
+      "from": "smoke-veil"
+    },
+    {
+      "id": "L-17",
+      "sign": "neg",
+      "lesson": "Clearance around a swept form has to be measured from its surface, not its centreline.",
+      "detail": "The veil's inner radius was set as a multiple of the helix radius, which is the centreline of the sweep. The tube has a thickness of its own, so at the default the veil's floor sat 0.13 units inside the glass wall it was supposed to be orbiting outside of. Then a second bug compounded it: the billow term scaled the radius, so noise could push a particle a further 22% inward. Nothing about either was visible in a still frame.",
+      "from": "smoke-veil"
+    },
+    {
+      "id": "L-18",
+      "sign": "pos",
+      "lesson": "Re-running a vertex shader on the CPU catches the geometry bugs a screenshot structurally cannot.",
+      "detail": "Orbit, containment and wrap are claims about motion and about the whole population. A still frame shows one instant of a few thousand visible particles, so it cannot falsify any of them. Replicating the shader in about eighty lines and asserting the properties directly — minimum radius clears the glass, both spin directions exist, nothing escapes the span at any scroll distance, the axial distribution stays even — found two real bugs that had already survived four rounds of looking at pictures.",
+      "from": "smoke-veil"
     }
   ],
-
   "perf_levers": [
-    {"lever": "pixel ratio", "was": "fixed [1, 2]", "now": "adaptive 0.75–2.0", "saving": 44, "why": "Cost scales with the square, so 2.0 → 1.5 is 44% fewer pixels shaded."},
-    {"lever": "transmission resolution", "was": "512", "now": "256", "saving": 75, "why": "This material re-renders the whole scene into a buffer every frame; halving the edge is a quarter of the pixels."},
-    {"lever": "backside", "was": "on", "now": "off", "saving": 50, "why": "Renders the mesh a second time through that pass — the most expensive checkbox on the page."},
-    {"lever": "composer multisampling", "was": "8", "now": "2", "saving": 75, "why": "Full-screen MSAA on every pass. Bloom hides much of what it buys."}
+    {
+      "lever": "pixel ratio",
+      "was": "fixed [1, 2]",
+      "now": "adaptive 0.75–2.0",
+      "saving": 44,
+      "why": "Cost scales with the square, so 2.0 → 1.5 is 44% fewer pixels shaded."
+    },
+    {
+      "lever": "transmission resolution",
+      "was": "512",
+      "now": "256",
+      "saving": 75,
+      "why": "This material re-renders the whole scene into a buffer every frame; halving the edge is a quarter of the pixels."
+    },
+    {
+      "lever": "backside",
+      "was": "on",
+      "now": "off",
+      "saving": 50,
+      "why": "Renders the mesh a second time through that pass — the most expensive checkbox on the page."
+    },
+    {
+      "lever": "composer multisampling",
+      "was": "8",
+      "now": "2",
+      "saving": 75,
+      "why": "Full-screen MSAA on every pass. Bloom hides much of what it buys."
+    }
   ],
-
   "open": [
     {
       "id": "Q-01",
@@ -528,6 +688,17 @@
       "id": "Q-08",
       "q": "The house-style risk, which is art direction rather than technique.",
       "why": "Procedural work has a look. A great deal of it is technically extraordinary and completely anonymous — it reads as a shader demo. The gap between that and something that reads as a place built with intent is composition and restraint, and no amount of craft in this log closes it."
+    },
+    {
+      "id": "Q-09",
+      "q": "Whether the veil reads as smoke or as fine dust on real hardware.",
+      "why": "It is built and it is contained, but the judgement it was asked for — does this look like smoke — has only ever been made against a CPU-rendered frame at 640×400. Density and sprite size are exactly the things that resolution changes. Unanswered until someone looks at it on a GPU."
+    },
+    {
+      "id": "Q-10",
+      "q": "What 40k additional soft additive points cost.",
+      "why": "They are cheap per vertex and the maths is trivial, but they are large soft sprites and the overdraw is real. Same problem as everything else here: it cannot be measured from the build environment, so the count sits on a slider and the stats panel is the only evidence.",
+      "blocks": "L-13"
     }
   ]
 }
