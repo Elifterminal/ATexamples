@@ -62,6 +62,12 @@
       "rule": "One light direction, exported from one place.",
       "why": "Every part of a scene that draws a pixel has to agree about where the light is — the environment, the lamps, any baked vertex shading, and every particle shader. Four separate answers is how a scene ends up looking lit from nowhere. Elevation and azimuth on sliders, one vector derived from them, consumed everywhere.",
       "from": "L-19"
+    },
+    {
+      "id": "R-09",
+      "rule": "Shared behaviour lives in shared code.",
+      "why": "When two things are specified to move the same way, put the motion in one module both consume. Copies satisfy the requirement once and then diverge silently under tuning — nothing errors, they just stop agreeing, and the drift is invisible until someone notices the scene looks wrong.",
+      "from": "L-24"
     }
   ],
   "assets": [
@@ -423,6 +429,63 @@
           ],
           "change": "Motes are lit by the shared light direction, and a subset of them sparkle. 14% are reflective at all; a half-vector facet term decides where a glint is possible and a per-particle flicker decides when, so roughly 98 of 40,000 are glinting at any instant, all on the lit side.",
           "why": "Dust that does not catch the light is just noise on the frame. Splitting the sparkle into a 'where' and a 'when' is what stops it reading as the whole field blinking — verified numerically rather than by eye, because a still frame catches an arbitrary instant of an intermittent effect."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "fix",
+          "ask": "A-15",
+          "lessons": [
+            "L-24"
+          ],
+          "change": "Rebuilt on the shared orbit module. Behaviour unchanged — the motion is the same code it always was, now in one place instead of about to become two.",
+          "why": "A second system was specified to move identically. Extracting rather than copying was the only version of that which survives either one being tuned later."
+        }
+      ]
+    },
+    {
+      "id": "hex-plates",
+      "name": "Flakes",
+      "example": "002-scroll-helix",
+      "born": "2026-07-28",
+      "status": "active",
+      "derived_from": "smoke-veil",
+      "line": "Rare, much larger hexagonal plates riding the same orbit as the dust, tumbling like falling snow and flashing iridescent when a face catches the light.",
+      "geometry": "220 instanced flat hexagons (a 6-segment circle), oriented per-instance in the vertex shader",
+      "authored_geometry": 0,
+      "made_of": "The one thing in the sheath with a face. Everything else here is a point sprite, which is always square-on to the camera and can therefore only brighten; a plate can turn, and turning is what lets it catch the light, sweep colour and vanish edge-on. It rides the identical orbit as the dust — literally the same GLSL and the same update function, pulled out into a shared module, because 'behaves the same way' is a requirement that two copies would quietly break. The tumble runs on its own clock rather than the orbit's: snow keeps turning at the same lazy rate whether or not it is being blown along.",
+      "recipe": {
+        "orbit": "shared with the dust, same module, same parameters",
+        "tumble": "two angles at unrelated per-plate rates plus a flutter term; no shared period, so no visible loop",
+        "measured tumble": "~38s per full turn; fastest plate 12x the slowest",
+        "basis": "reference vector swaps when the normal nears vertical, or the cross product collapses once per tumble",
+        "lighting": "lit by its own face, not by where it sits on the shell — a plate underneath with its face turned up really is catching the key",
+        "edge-on": "alpha scales with how square-on the plate is to the viewer, so it thins to nothing sideways",
+        "shine": "abs(dot(normal, half)) ^ 16 — abs because a flake is thin enough that either face can take the light",
+        "iridescence": "three offset cosines driven by the viewing angle; no texture, and the hue sweeps as the plate turns",
+        "measured flash": "~11 of 220 plates flashing at any instant, each one lit ~2% of the time"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-28",
+          "kind": "born",
+          "ask": "A-15",
+          "lessons": [
+            "L-23",
+            "L-25",
+            "L-26"
+          ],
+          "change": "Built as the third element in the sheath — rare, several times larger than the dust, tumbling slowly, flashing iridescent when a face lines up with the light.",
+          "why": "The ask needed something a point sprite cannot do. Verified numerically the way the rest of the sheath has been: the basis never degenerates over 400 simulated seconds, the tumble is slow and never repeats, both faces flash, and plates genuinely pass through edge-on. A still frame can show none of that."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "fix",
+          "ask": "A-15",
+          "lessons": [
+            "L-24"
+          ],
+          "change": "Pulled the orbital motion out of the dust into a shared module and rebuilt both systems on it, rather than copying the shader into the new one.",
+          "why": "'They behave the same way as the dust' is a requirement. A copy satisfies it on the first day and breaks it silently the first time either is tuned — nothing errors, the two just stop agreeing. Sharing the code makes it structural."
         }
       ]
     }
@@ -532,6 +595,14 @@
       "verbatim": "it reads as fine dust. So lets treat it as fine dust. Lets make some of the particles, occasionally sparkle, as if they are randomly catching light. And, lets fix the light for the entire thing, the double helix, the particles, everything, looks pretty flat. Lets say the light is coming from above, and it should reflect off the helixes as if it is coming from above, and the light should respect the contours of the shapes",
       "summary": "Judged the veil as dust rather than smoke and reclassified it deliberately, then called the whole scene flat and asked for a single light from above that the whole form responds to.",
       "effect": "The veil became Dust, with a sparkle. And a proper lighting pass: one shared direction driving the environment, a real lamp, the glass core's shading and both particle systems. The flatness was not a material problem — it was four things lit four different ways.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-15",
+      "date": "2026-07-28",
+      "verbatim": "hexagons that are flat and they also orbit the double helix, but they flip slowly and when their faces catch the light they shine irridecent and the flipping should almost behave like snow falling, slow, and random, and there shouldn't be many of them, but they should be larger than the dust by quite a bit. and they behave the same way as the dust and they obey the lighting pattern",
+      "summary": "Asked for a third, rarer, much larger element in the sheath: flat hexagonal plates that tumble like falling snow and flash iridescent when a face catches the light.",
+      "effect": "Flakes. Also forced the orbital motion out into a shared module — 'they behave the same way as the dust' is a requirement that two hand-kept copies would quietly break.",
       "kind": "direction"
     }
   ],
@@ -689,6 +760,34 @@
       "lesson": "A convincing sparkle needs a where and a when, multiplied.",
       "detail": "Flickering particles on a timer reads as the whole field blinking. Splitting it in two fixes it: a half-vector term decides WHERE a glint is geometrically possible, and a per-particle flicker decides WHEN it fires. Multiplied, glints cluster in the band actually facing the light and only a fraction fire at once — measured at ~98 of 40,000 at any instant, all of them on the lit side. Only 14% of motes are reflective at all, and a glinting mote also grows slightly, which turns out to be most of what sells it.",
       "from": "smoke-veil"
+    },
+    {
+      "id": "L-23",
+      "sign": "pos",
+      "lesson": "A sprite can only brighten. Give a particle a face and it can turn away.",
+      "detail": "Point sprites are always square-on to the camera, so the only thing they can express is intensity. The moment the ask involved catching light on a face, they stopped being the right primitive — a flat plate is real instanced geometry with an orientation, and orientation is what lets it flash, sweep colour, and then vanish edge-on. The edge-on disappearance costs one dot product against the view direction and does more for the falling-snow read than the tumble maths itself.",
+      "from": "hex-plates"
+    },
+    {
+      "id": "L-24",
+      "sign": "pos",
+      "lesson": "'Behaves the same as X' is a requirement to share the code, not to copy it.",
+      "detail": "Two systems were meant to ride identical motion. Copying the shader would have satisfied that on day one and broken it the first time either was tuned — and the breakage would be invisible, because nothing fails, the two just quietly stop agreeing. The motion moved into one module that both shaders paste in and both components drive through one update function. Sameness became structural rather than remembered, which is the same principle the generated log itself runs on.",
+      "from": "hex-plates"
+    },
+    {
+      "id": "L-25",
+      "sign": "neg",
+      "lesson": "Building a basis from a normal collapses when the normal meets the reference vector.",
+      "detail": "A tumbling plate needs a local basis, and the obvious cross(up, normal) goes to zero every time the plate points straight up — once per tumble, per plate, forever. The fix is to swap the reference vector when the normal gets near vertical. Checked rather than assumed: the smallest cross product over 400 simulated seconds is 0.31, so the basis never gets close to degenerate.",
+      "from": "hex-plates"
+    },
+    {
+      "id": "L-26",
+      "sign": "pos",
+      "lesson": "Two incommensurate rates read as random; one rate reads as machinery.",
+      "detail": "The tumble is two angles advancing at unrelated per-plate rates, plus a slow flutter term. Because the rates never share a period, the motion has no visible loop — which is most of what 'random' means to an eye watching for a few seconds. Measured: a full turn takes about 38 seconds and the fastest plate tumbles 12x the slowest. Snow is slower than instinct suggests; the first guess was several times too fast.",
+      "from": "hex-plates"
     }
   ],
   "perf_levers": [
@@ -773,6 +872,11 @@
       "id": "Q-11",
       "q": "Whether the key is too hot at the default.",
       "why": "The specular streak reads clearly as light from above, which was the ask, but it blows close to white on the upper faces and the form underneath it is a saturated magenta. That may be exactly right or it may look pasted on — it is a judgement about the picture, and it has only been seen through a CPU-rendered frame at 640x400."
+    },
+    {
+      "id": "Q-12",
+      "q": "Whether the flakes want to be scarcer and larger still.",
+      "why": "The brief said rare and much bigger, and the defaults are one reading of that — 220 plates at a size where a couple are catching light in frame at any moment. Twice the size and half the number is a different picture and might be the better one. Only an eye on real hardware can pick."
     }
   ]
 }

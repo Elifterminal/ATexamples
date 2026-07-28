@@ -2,7 +2,7 @@
 
 The capability test for scroll-driven navigation — the last real unknown before committing to a concept.
 
-Horizontal scroll moves a camera along a static glass helix. The particles inside drift on their own and surge with scroll velocity. A veil of very small motes orbits the outside, catching the light now and then. Cards are real DOM anchors positioned by projecting world coordinates every frame.
+Horizontal scroll moves a camera along a static glass helix. The particles inside drift on their own and surge with scroll velocity. A veil of very small motes orbits the outside, catching the light now and then, with a few much larger hexagonal flakes tumbling among them. Cards are real DOM anchors positioned by projecting world coordinates every frame.
 
 Scroll with a wheel, trackpad, arrow keys, page up/down, home/end, or touch.
 
@@ -52,6 +52,26 @@ That was verified numerically, not by eye — a still frame catches one arbitrar
 
 Knobs are in `dust` and `sparkle`.
 
+## The flakes
+
+Rare, several times larger than the dust, and the only thing in the sheath with a **face**.
+
+That's the whole reason they're real instanced geometry rather than bigger sprites. A point sprite is always square-on to the camera, so the only thing it can express is intensity — it can brighten, it can't turn away. A flat plate has an orientation, and orientation is what lets it catch the light, sweep colour across its face, and then thin to nothing edge-on. The edge-on disappearance costs one dot product against the view direction and does more for the falling-snow read than the tumble maths does.
+
+The tumble is two angles advancing at unrelated per-plate rates, plus a slow flutter term. Because the rates never share a period the motion has no visible loop, which is most of what "random" means to an eye watching for a few seconds. It runs on its own clock rather than the orbit's — snow keeps turning at the same lazy rate whether or not it's being blown along, and tying the two together made the plates spin up whenever the page scrolled, which read as debris in a wind tunnel.
+
+Measured rather than guessed: a full turn takes about **38 seconds**, the fastest plate tumbles 12× the slowest, and roughly 11 of 220 plates are flashing at any instant, each lit about 2% of the time. Snow is slower than instinct suggests — the first guess was several times too fast.
+
+Iridescence is three offset cosines driven by the viewing angle. No texture, and because it's driven by angle rather than time the hue sweeps as the plate turns instead of every plate being the same colour at once. The shine term uses `abs(dot(normal, half))` — a flake is thin enough that either face can take the light, and without the `abs` it's dead half the time it should be flashing, for no reason a viewer could name.
+
+**One bug worth keeping:** building a local basis from the plate's normal with `cross(up, normal)` collapses to zero every time a plate points straight up — once per tumble, per plate, forever. The reference vector has to swap when the normal nears vertical. Checked rather than assumed: the smallest cross product over 400 simulated seconds is 0.31.
+
+### Shared motion
+
+The flakes ride the *identical* orbit as the dust — the same GLSL and the same update function, pulled into `scene/orbit.js` and consumed by both.
+
+Copying the shader would have satisfied "behaves the same way as the dust" on the first day and broken it the first time either one was tuned. That breakage is invisible: nothing errors, the two just quietly stop agreeing. Sharing the code makes sameness structural instead of remembered — the same principle the generated log runs on.
+
 ## Lighting
 
 The whole scene was flat, and the instinct — reach for the glass material — was wrong. The glass was fine. **The scene was lit four separate ways that didn't agree**: the environment had its own rig, the luminous core was drawn unlit, and both particle systems were flat colour with no notion of a light at all. Nothing agreed about where the light was, so nothing read as lit.
@@ -63,7 +83,8 @@ The whole scene was flat, and the instinct — reach for the glass material — 
 | environment strips | key positioned along it, so moving the light moves the reflection in the glass |
 | directional lamp | gives the highlight a *position* — reflection alone moves with the surface but never says where the source is |
 | luminous core | half-lambert baked into vertex colours at build time; stays emissive, but gains a top and a bottom |
-| both particle systems | half-lambert against each particle's own outward direction from the central axis |
+| dust and flow | half-lambert against each particle's own outward direction from the central axis |
+| flakes | half-lambert against the plate's own **face**, so a plate underneath with its face turned up really is catching the key |
 
 Two things mattered more than expected:
 

@@ -7,6 +7,7 @@ import { Leva, useControls } from 'leva'
 import { HelixLights, HelixTube } from './scene/HelixTube.jsx'
 import { HelixParticles } from './scene/HelixParticles.jsx'
 import { DustVeil } from './scene/DustVeil.jsx'
+import { HexPlates } from './scene/HexPlates.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
 import { KEY, useLightDirection } from './scene/lighting.js'
 import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
@@ -118,6 +119,25 @@ function Scene({ scroll, cardRefs }) {
     tightness: { value: 18, min: 1, max: 80, step: 1 },
   })
 
+  // Rare, much larger, and the only thing in the sheath with a face. They ride
+  // the identical orbit as the dust — shared code, not a second copy — but a
+  // plate can turn, and turning is what lets it catch the light and then vanish
+  // edge-on. Keep `count` low: the whole point is that they're uncommon.
+  const hex = useControls('hex', {
+    count: { value: 220, min: 0, max: 2000, step: 10 },
+    size: { value: 0.3, min: 0.02, max: 1.5, step: 0.005 },
+    opacity: { value: 0.32, min: 0, max: 2, step: 0.01 },
+    base: '#7f93b8',
+    inner: { value: 1.2, min: 1, max: 6, step: 0.02 },
+    shell: { value: 1.5, min: 0.05, max: 8, step: 0.05 },
+    tumble: { value: 0.35, min: 0, max: 4, step: 0.01 },
+    flutter: { value: 0.55, min: 0, max: 3, step: 0.01 },
+    shine: { value: 1.3, min: 0, max: 6, step: 0.02 },
+    shineTightness: { value: 16, min: 1, max: 120, step: 1 },
+    iridSpread: { value: 1.1, min: 0, max: 3, step: 0.01 },
+    iridShift: { value: 0.1, min: 0, max: 1, step: 0.01 },
+  })
+
   return (
     <>
       <ScrollRig
@@ -202,6 +222,36 @@ function Scene({ scroll, cardRefs }) {
         sparkleFraction={glint.fraction}
         sparkleRate={glint.rate}
         sparkleTightness={glint.tightness}
+      />
+
+      <HexPlates
+        count={hex.count}
+        span={LENGTH}
+        radius={form.radius}
+        tube={form.tube}
+        inner={hex.inner}
+        shell={hex.shell}
+        counter={dust.counter}
+        size={hex.size}
+        opacity={hex.opacity}
+        base={hex.base}
+        orbit={dust.orbit}
+        orbitSurge={dust.orbitSurge}
+        follow={dust.follow}
+        turbulence={dust.turbulence}
+        billow={dust.billow}
+        wander={dust.wander}
+        settle={dust.settle}
+        tumble={hex.tumble}
+        flutter={hex.flutter}
+        shine={hex.shine}
+        shineTightness={hex.shineTightness}
+        iridSpread={hex.iridSpread}
+        iridShift={hex.iridShift}
+        scroll={scroll}
+        direction={direction}
+        ambient={light.ambient}
+        contrast={light.contrast}
       />
 
       {/* Default multisampling is 8. Dropping it is one of the largest single
