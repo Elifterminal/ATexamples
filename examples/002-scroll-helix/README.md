@@ -6,6 +6,8 @@ Horizontal scroll moves a camera along a static glass helix. The particles insid
 
 Scroll with a wheel, trackpad, arrow keys, page up/down, home/end, or touch.
 
+**Live:** <https://elifterminal.github.io/ATexamples/examples/002-scroll-helix/> — add `?tune` to the URL for the control panel, which is otherwise hidden outside development.
+
 ## What it was testing
 
 Four things, in order of how much doubt there was.
@@ -163,6 +165,16 @@ helix multiplies segment count by its number of turns.
 ## Known
 
 The card links are stand-ins pointing at real pages in this repo, not a designed navigation.
+
+## Sharing it
+
+It had been publicly reachable since the first push, which is not the same as being fit to show anyone. Three things were missing, and none of them are visible while building because the person building it already knows how it works:
+
+- **A tuning panel greeted every visitor.** It's for making the thing, not for looking at it. Now it appears in development and behind `?tune`, and nowhere else.
+- **Nothing said the page moves sideways.** A visitor who doesn't discover that sees a still picture and leaves. A one-line hint says so and disappears the moment they touch anything, so it never becomes furniture for someone who already knows.
+- **A shared link unfurled with no picture.** There's a preview image now, which doubles as the gallery thumbnail.
+
+The panel-hiding was verified twice. The first check queried an element id the library doesn't use, so it reported the panel absent — and would have reported that whether or not the panel was there. It was caught only because the same selector then claimed the panel was missing from a build where it was demonstrably present. A check that has only ever returned the answer you wanted might be measuring nothing.
 
 ## Lifting it
 

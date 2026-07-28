@@ -1,4 +1,4 @@
-import { StrictMode, useMemo, useRef, useState } from 'react'
+import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Canvas } from '@react-three/fiber'
 import { Environment, Stats } from '@react-three/drei'
@@ -328,13 +328,42 @@ function Scene({ scroll, cardRefs }) {
   )
 }
 
+// The tuning panel is for building this, not for looking at it. It stays put
+// while developing and disappears once it is published, so someone arriving at
+// the page is met by the piece rather than by its controls. ?tune brings it back
+// on the live page when the sliders are actually wanted there.
+const TUNING =
+  import.meta.env.DEV || new URLSearchParams(window.location.search).has('tune')
+
 function App() {
   const scroller = useRef(null)
   const cardRefs = useRef([])
   const scroll = useRef({ target: 0, current: 0, velocity: 0 })
   const [dpr, setDpr] = useState(1.25)
+  const [nudged, setNudged] = useState(false)
 
   useScrollProgress(scroller, scroll)
+
+  // Nothing on screen says the page moves sideways, and a visitor who does not
+  // discover that sees a still picture and leaves. The hint goes the moment they
+  // touch anything, so it never becomes furniture for someone who already knows.
+  useEffect(() => {
+    const dismiss = () => setNudged(true)
+    const options = { once: true, passive: true }
+
+    window.addEventListener('wheel', dismiss, options)
+    window.addEventListener('touchstart', dismiss, options)
+    window.addEventListener('keydown', dismiss, { once: true })
+
+    const timer = setTimeout(dismiss, 7000)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('wheel', dismiss)
+      window.removeEventListener('touchstart', dismiss)
+      window.removeEventListener('keydown', dismiss)
+    }
+  }, [])
 
   return (
     <>
@@ -379,7 +408,12 @@ function App() {
         </div>
       </div>
 
-      <Leva titleBar={{ title: '002 · scroll helix' }} collapsed />
+      <div className={`nudge${nudged ? ' nudge-gone' : ''}`} aria-hidden="true">
+        <span className="nudge-arrow">→</span>
+        scroll to move through it
+      </div>
+
+      <Leva titleBar={{ title: '002 · scroll helix' }} collapsed hidden={!TUNING} />
     </>
   )
 }

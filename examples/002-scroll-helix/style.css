@@ -150,3 +150,50 @@ canvas {
     font-size: 19px;
   }
 }
+
+/* First-run hint. Nothing on screen says the page moves sideways, and a visitor
+   who doesn't discover that sees a still picture and leaves. It goes the moment
+   they touch anything, so it never becomes furniture for someone who knows. */
+
+.nudge {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(3rem, 9vh, 5.5rem);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 1.2rem;
+  border: 1px solid rgba(231, 233, 239, 0.22);
+  border-radius: 999px;
+  background: rgba(7, 8, 12, 0.5);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.nudge-gone {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.nudge-arrow {
+  color: var(--accent);
+  animation: nudge-drift 1.8s ease-in-out infinite;
+}
+
+@keyframes nudge-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-arrow {
+    animation: none;
+  }
+}
