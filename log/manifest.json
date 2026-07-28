@@ -1,0 +1,533 @@
+{
+  "_note": "Single source of truth for the asset log page. Nothing on public/log/index.html is hand-written — run `npm run log` to regenerate, `npm run log:check` to catch drift. Add a revision here, not in the HTML.",
+
+  "page": {
+    "title": "Asset Log",
+    "sub": "An open notebook for a procedural WebGL study — building site-quality 3D forms out of formulas instead of models. Every asset here, how it was made, every time it changed, and who asked. Dead ends included.",
+    "updated": "2026-07-28",
+    "repo": "https://github.com/Elifterminal/ATexamples"
+  },
+
+  "premise": {
+    "claim": "You can reach a convincing 3D asset without authoring any geometry, if the treatment carries it.",
+    "status": "held",
+    "settled": "2026-07-24",
+    "scope": "One form at a time, centred, on a near-black background, in glass. Not yet tested on composed multi-element scenes, which is where it is expected to get hard.",
+    "evidence": ["glass-knot", "glass-eye", "glass-helix"]
+  },
+
+  "rules": [
+    {
+      "id": "R-01",
+      "rule": "Free assets are clay, not the final look.",
+      "why": "A downloaded mesh with its default texture reads as a free mesh. The expensive feeling comes from lighting, grade, material, motion and post — the layers we control. Skip that and you get asset soup."
+    },
+    {
+      "id": "R-02",
+      "rule": "Treatment belongs to the asset, not the page.",
+      "why": "Learned the hard way on Ocellus. A four-panel rig that flatters a knot reflects off a sphere as grey rectangles. Every catalogue entry now carries its own light AND post recipe, and can opt out of the base rig entirely.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "R-03",
+      "rule": "Every aesthetic knob goes on a slider.",
+      "why": "Taste is superb at picking and tuning and terrible at describing. Wiring the knobs to Leva means the director's eye drives the pixels directly instead of the subtlety having to survive translation into adjectives. Variant grids for the same reason — selection is effortless where specification is agony."
+    },
+    {
+      "id": "R-04",
+      "rule": "Assets are deterministic.",
+      "why": "Anything placed by a random draw gets a seeded PRNG. An asset that rolls a different lottery on every refresh cannot be art-directed — you would be tuning a thing that no longer exists.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "R-05",
+      "rule": "Folders stay liftable.",
+      "why": "No example imports from another. helixCurve.js is duplicated on purpose rather than shared, so any folder can be copied out whole. Local assets only — no CDN fonts, no remote HDRI."
+    },
+    {
+      "id": "R-06",
+      "rule": "Instrument rather than guess on performance.",
+      "why": "The browser these are built through renders on the CPU, so no framerate number from the build process would mean anything. So the page measures itself on whatever GPU it lands on, adapts its own pixel ratio, and exposes every expensive knob. The stats panel is the only real evidence.",
+      "from": "L-13"
+    }
+  ],
+
+  "assets": [
+    {
+      "id": "glass-knot",
+      "name": "Knot",
+      "example": "001-glass-catalogue",
+      "born": "2026-07-24",
+      "status": "active",
+      "line": "Parametric torus knot in transmission glass.",
+      "geometry": "torusKnotGeometry — one Three.js built-in, 220 × 32 segments",
+      "authored_geometry": 0,
+      "made_of": "One line of JSX. torusKnotGeometry(1, 0.32, 220, 32) in a MeshTransmissionMaterial, lit by four Lightformers arranged key / rim / rim / fill, over a near-black ground, with bloom and a vignette on top. The smoothness is tessellation, and it costs nothing because the form is generated from a formula rather than stored and loaded. This asset is the whole argument in one object: it was mistaken for a modeled mesh, and there is no mesh.",
+      "recipe": {
+        "roughness": "0.05",
+        "thickness": "1.6",
+        "ior": "1.42",
+        "chromaticAberration": "0.34",
+        "anisotropicBlur": "0.2",
+        "distortion": "0.28 @ scale 0.4",
+        "temporalDistortion": "0.12",
+        "backside": "off — the most expensive checkbox here",
+        "light": "key 1.4 / rim 0.9 / fill 0.25",
+        "spin": "0.15 rad/s on Y, 0.35× that on X"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-24",
+          "kind": "born",
+          "ask": "A-02",
+          "change": "Built as 001-glass-hero, a single hero form, plus a look-tuning pass.",
+          "why": "Wanted as a smoke test for the freshly-scaffolded repo. Also an overreach — see A-02; it was kept rather than deleted."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "rename",
+          "ask": "A-04",
+          "change": "001-glass-hero → 001-glass-catalogue. The number was preserved; only the descriptor changed. Knot became one entry of three behind a browse strip.",
+          "why": "Once a second asset existed, a page called 'hero' was lying about what it was. The number is a rung on the capability ladder, so renumbering would have been the wrong fix."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "feature",
+          "change": "Added a shape selector — torus knot / icosahedron / torus / box — on the same material.",
+          "why": "Cheapest possible demonstration that the material and rig, not the form, are doing the work."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "fix",
+          "lessons": ["L-06"],
+          "ask": "A-04",
+          "change": "Scoped every Leva control folder per asset.",
+          "why": "Leva persists control values by path, not by component lifetime, so remounting on a catalogue switch did not reset anything — and the per-asset defaults each entry carried were silently doing nothing. Noticed here because the Knot is the first asset the switcher lands on."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "perf",
+          "ask": "A-11",
+          "change": "backside off by default, transmission resolution 512 → 256, composer multisampling 8 → 2.",
+          "why": "backside renders the mesh a second time through the transmission pass. The transmission material re-renders the whole scene into a buffer every frame, so halving its resolution is a quarter of the pixels. Arithmetic reductions in work, not measured framerate gains — see L-13."
+        }
+      ]
+    },
+
+    {
+      "id": "glass-eye",
+      "name": "Ocellus",
+      "example": "001-glass-catalogue",
+      "born": "2026-07-24",
+      "status": "active",
+      "line": "A radial iris suspended in a glass orb. Instanced fibres, deterministic.",
+      "geometry": "sphere + circles + torus + ~220 instanced boxes",
+      "authored_geometry": 0,
+      "made_of": "An eye with nothing modeled in it. A dark disc for the sclera, a torus for the limbal ring, a black circle for the pupil, about 220 instanced boxes fanned out radially as iris fibres, and a sphere of glass over the whole thing. The orb's refraction magnifies and bends the fibres behind it, and that bending is what actually sells it as an eye — not the parts list. Fibre placement runs off a seeded PRNG so it is identical on every load.",
+      "recipe": {
+        "fibres": "~220 instanced boxes, radial fan, seeded PRNG",
+        "iris": "emissive — it lights itself",
+        "orb": "thin transmission sphere, no nested transmission inside it",
+        "fibre material": "clearcoat + iridescence, NOT transmission",
+        "light": "base rig OFF entirely; round catchlights only",
+        "distance": "2.9"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-24",
+          "kind": "born",
+          "ask": "A-04",
+          "change": "Built as the second catalogue entry, to test whether the premise survived a form with internal structure rather than a single solid.",
+          "why": "A knot is the friendliest possible case. An eye has parts that have to read through each other."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-01"],
+          "change": "First version rendered almost entirely black.",
+          "why": "Glass shows you what is behind it, and behind it was a dark interior on a dark background — so the transmission sphere absorbed everything. Fixed by making the iris emit its own light and thinning the orb. Adding more lights would not have worked; the problem was that there was nothing to see through to."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-03"],
+          "change": "Iris fibres were originally a transmission material too, sitting inside the orb's transmission pass. Replaced with clearcoat + iridescence.",
+          "why": "Each transmission material forces its own full-scene render. Nesting them tanked the frame hard enough that headless screenshots timed out. The fibres read as glass anyway, because the orb in front is doing the real refracting."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-02"],
+          "change": "Opted out of the shared four-panel light rig; lit by its own round catchlights instead.",
+          "why": "Big rectangular lightformers reflect off a sphere as literal grey rectangles and read as CG instantly. Circular formers are most of what makes an eye look wet. This is the revision that produced rule R-02."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "fix",
+          "lessons": ["L-07"],
+          "change": "Fibre placement moved from Math.random to a seeded PRNG.",
+          "why": "The asset was rolling a different arrangement on every refresh. You cannot art-direct a lottery — you would be tuning something that will not exist next reload."
+        }
+      ]
+    },
+
+    {
+      "id": "glass-helix",
+      "name": "Strand",
+      "example": "001-glass-catalogue",
+      "born": "2026-07-24",
+      "status": "active",
+      "line": "A double helix of glass pipe with 12,000 particles running through it.",
+      "geometry": "two tubeGeometry sweeps along an analytic helix, merged — particles positioned in a vertex shader",
+      "authored_geometry": 0,
+      "made_of": "The helix is a formula, which is the important part: the same three lines drive the tube sweep on the CPU and every particle position in the vertex shader, so they cannot drift out of sync and nothing is updated per frame. Both strands are merged into a single geometry so there is one transmission pass instead of two. 12,000 particles ride through the pipe like water, over a dimmer inner tube of additive colour that gives the flow a body.",
+      "recipe": {
+        "particles": "12,000, positioned entirely in a vertex shader",
+        "per-frame CPU work": "zero — one time uniform",
+        "strands": "2, merged into one geometry → one transmission pass",
+        "flow body": "inner additive tube under the points",
+        "ior": "dropped from 1.44 — see the stripes failure below",
+        "post": "bloom 0.7 @ threshold 0.42, vignette 0.65",
+        "light": "base rig OFF",
+        "distance": "8"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-24",
+          "kind": "born",
+          "ask": "A-04",
+          "change": "Built as the third catalogue entry — a form plus a flow, rather than a form alone.",
+          "why": "The first two assets are objects. This one tests whether motion through a form can be carried procedurally too."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-04"],
+          "change": "The particle flow went through five versions before it worked. Bright and dense it swamped the glass and looked like glowing rope; small and sparse it looked like dirt in a tube.",
+          "why": "The fix was structural rather than numeric, which is why four rounds of tuning numbers got nowhere. Real fluid has a luminous body, so there is now a dimmer inner tube of additive colour with the particles riding on top as detail. Particles alone read as dust."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-05"],
+          "change": "At ior 1.44 the tube facets bent the particles behind them into hard diagonal bands that read as scales on a snake. Dropped the index.",
+          "why": "Glass that refracts hard is beautiful over an empty background and ruinous over something you want to see. The lower index makes it behave like a clear shell rather than a lens."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "fix",
+          "change": "Bloom threshold lowered to 0.42 for this asset specifically.",
+          "why": "The threshold of 0.9 that keeps the Knot's glass clean swallowed the emissive particles entirely. Second piece of evidence for R-02 — post belongs to the asset too, not just lighting."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "fix",
+          "lessons": ["L-14"],
+          "ask": "A-11",
+          "change": "Merged tube geometries are now disposed when parameters change.",
+          "why": "They were rebuilt by useMemo on every parameter change and the old buffers were never freed, so dragging a slider leaked GPU memory until the tab was closed. A real bug, found while doing something else."
+        }
+      ]
+    },
+
+    {
+      "id": "scroll-helix",
+      "name": "Strand (scroll variant)",
+      "example": "002-scroll-helix",
+      "born": "2026-07-24",
+      "status": "active",
+      "derived_from": "glass-helix",
+      "line": "The same helix held still in world space while a camera travels along it.",
+      "geometry": "tubeGeometry along the same analytic helix, 60 units long — camera travels 42 of them",
+      "authored_geometry": 0,
+      "made_of": "A deliberate inversion of Strand: there, the form rotates and the flow is driven by time. Here the form does not move at all and the camera does the travelling, because 'a card every so often along it' needs a distance to measure against. The particle flow accumulator became flow += delta * (drift + |scrollVelocity| * surge) — the swap from a time uniform to scroll progress was about three lines, exactly as predicted when the concept was pressure-tested.",
+      "recipe": {
+        "scroll span": "700vw — viewport units, never pixels",
+        "measured travel": "7.00 viewport-widths at 1100px AND at 420px",
+        "flow": "delta × (drift + |scrollVelocity| × surge); drift never zero",
+        "cards": "real DOM <a> anchors, world position projected to screen each frame",
+        "card fade": "opacity, pointer-events and tabIndex all follow camera distance",
+        "camera distance": "driven by aspect ratio",
+        "visible span": "also scaled by aspect, clamp 0.4–1.0 — the portrait mitigation",
+        "tessellation": "segmentsPerTurn exposed — a long helix multiplies segments by turns"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-24",
+          "kind": "born",
+          "ask": "A-10",
+          "lessons": ["L-08", "L-09", "L-10"],
+          "change": "Built as the scroll capability test — the last real unknown before committing to a direction.",
+          "why": "Four questions in order of doubt: does scroll-driven camera work in this stack, does 'alive at rest' actually feel different, can cards be real links, does the responsive strategy hold. Three came back clean on the first build; the fourth is the failure below."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "failure",
+          "lessons": ["L-11"],
+          "ask": "A-08",
+          "change": "First version computed camera distance so a chosen world-width always fit the frame. Correct on desktop; on portrait it pushed the camera so far back the helix became a thread in a void. Mitigated by scaling the visible span with aspect too.",
+          "why": "Technically correct framing, visually dead. The mitigation takes portrait from broken to acceptable, NOT to good — a horizontal form in a tall frame wastes most of the screen however it is scaled. The honest fix is a rotated vertical variant designed as its own composition, and it is not built. This is the most useful negative result in the log."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "fix",
+          "lessons": ["L-12"],
+          "change": "Moved the full-screen scroll proxy before the interactive layers in the DOM, and put the wheel listener on window rather than on the scroller.",
+          "why": "The proxy sat over the cards and swallowed every click. And with the listener on the scroller, scrolling died whenever the cursor was over a card."
+        },
+        {
+          "date": "2026-07-24",
+          "kind": "perf",
+          "ask": "A-11",
+          "change": "Adaptive pixel ratio (0.75–2.0) via a performance monitor, replacing a fixed [1, 2]. Tube tessellation exposed. Live stats panel behind perf → stats.",
+          "why": "Cost scales with the square of pixel ratio, so 2.0 → 1.5 is 44% fewer pixels shaded. The ratio walks itself up when frames are cheap and down when they are not, so a big desktop GPU and a laptop integrated chip both land somewhere sensible without a device check."
+        }
+      ]
+    }
+  ],
+
+  "asks": [
+    {
+      "id": "A-01",
+      "date": "2026-07-23",
+      "summary": "Set the strategy before any code: no custom engine, procedural and shader-driven as the primary lane, free assets are clay, communicate by direct manipulation rather than verbal specification.",
+      "effect": "Everything in this log follows from here. The rules panel is this decision, unpacked.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-02",
+      "date": "2026-07-24",
+      "verbatim": "I only wanted you to make the repos. I didnt ask you to make an example.",
+      "summary": "Scope correction. Repos had been asked for; an example and a look-tuning pass were delivered on top, unasked.",
+      "effect": "Stopped mid-turn, reported state, offered to delete it. Kept as a smoke test — which is how the Knot exists. The standing lesson: when infrastructure is asked for, infrastructure is what is meant. The creative content is the director's seat.",
+      "kind": "correction"
+    },
+    {
+      "id": "A-03",
+      "date": "2026-07-24",
+      "verbatim": "that shape was impressive... the lighting was excellent",
+      "summary": "Asked whether a newer model had brought some new 3D capability with it.",
+      "effect": "Corrected honestly: it is torusKnotGeometry(1, 0.32, 220, 32), a built-in parametric primitive with zero authored geometry. The look came from the treatment. Not a new capability — an old principle working.",
+      "kind": "question"
+    },
+    {
+      "id": "A-04",
+      "date": "2026-07-24",
+      "summary": "Turn the single hero into a browsable catalogue of named assets, referable by stable id.",
+      "effect": "001-glass-hero → 001-glass-catalogue; Ocellus and Strand built; ids fixed so a brief can name an asset without ambiguity. Names and tuning stay changeable, ids do not.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-05",
+      "date": "2026-07-24",
+      "summary": "Naming convention: NNN-technique-descriptor, with the searchable detail in a per-example meta.json.",
+      "effect": "Number is a rung on the capability ladder, technique is the one thing demonstrated, descriptor is flavour. Folder name for scanning, meta for finding. The gallery builds itself from those files; a scaffold script enforces the convention.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-06",
+      "date": "2026-07-24",
+      "verbatim": "you are able to mimic 3d assets with code, and the combination of those assets with particle effects and lighting can be made spectacular... So i think we can make my vision without using actual 3d assets.",
+      "summary": "Verdict on the three assets. The premise held.",
+      "effect": "Closed the largest open risk in the project — bespoke 3D asset creation was the identified long pole and it stopped being a blocker. Tempered at the time: the work did not shrink, the bottleneck moved from modeling into maths and shader craft. Relocated effort, not less of it.",
+      "kind": "verdict"
+    },
+    {
+      "id": "A-07",
+      "date": "2026-07-24",
+      "summary": "Described the working concept: a horizontally-scrolling page, a double helix that does not move, only the particles moving and driven by scroll, cards along it acting as the navigation.",
+      "effect": "Pressure-tested as a strong fit — every element is a formula, nothing needs modeling. The specific strength named at the time: the structure holds still and only the flow moves, which is the cheapest thing to animate and among the most beautiful. Geometry gets built once and never touched.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-08",
+      "date": "2026-07-24",
+      "verbatim": "a beautiful scroll on one screen sucks on another",
+      "summary": "Raised responsiveness as a first-class risk before anything was built.",
+      "effect": "Produced the responsive strategy — normalised 0→1 progress decoupled from pixels, length as a multiple of viewport, camera distance from aspect, cards as DOM over the canvas, and portrait rotating rather than shrinking. Half of it was then confirmed empirically and half of it failed; see L-10 and L-11. This ask paid for itself.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-09",
+      "date": "2026-07-24",
+      "verbatim": "hide the seams",
+      "summary": "The organising principle for the whole responsive problem.",
+      "effect": "If the user never sees a whole object, there is no wrong crop — so the problem partly dissolves rather than being solved. Helix ends stay off-frame, breakpoint variants never co-occur, there are no section cuts, cards ease in rather than pop. Also surfaced the one seam with an architectural consequence: the page transition. Noted as a misread of 'scenes' at the time, and the real phrase was the better idea.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-10",
+      "date": "2026-07-24",
+      "summary": "Greenlit the scroll capability test — explicitly after it had been offered rather than started.",
+      "effect": "002-scroll-helix. Three of four questions came back clean; the fourth produced the portrait failure, which is the most valuable thing in this log.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-11",
+      "date": "2026-07-24",
+      "verbatim": "we will worry about the perf pass later, but dont forget we need to worry about it",
+      "summary": "Deferred performance without dropping it, then later chose the perf pass over the vertical variant and the persistent-canvas test.",
+      "effect": "Adaptive pixel ratio, cheaper transmission defaults, backside off, multisampling down, a live stats toggle — and a GPU memory leak found and fixed along the way. Approach forced by L-13: measurement was impossible from the build environment, so the answer was to instrument rather than guess.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-12",
+      "date": "2026-07-28",
+      "summary": "Asked for this page — a living log of the assets, how they were made, how they changed, and the asks that changed them.",
+      "effect": "This document. Generated from a manifest so it cannot quietly go stale, and the protocol for keeping it current is now a standing rule of the project rather than something to remember.",
+      "kind": "direction"
+    }
+  ],
+
+  "lessons": [
+    {
+      "id": "L-01",
+      "sign": "neg",
+      "lesson": "Glass shows you what is behind it, and against a black background that is nothing.",
+      "detail": "A transmission sphere over a dark interior absorbs everything — the first Ocellus was almost entirely black. The fix was making the iris emit its own light and thinning the orb, not adding more lights.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "L-02",
+      "sign": "neg",
+      "lesson": "Lighting and post belong to the asset, not to the page.",
+      "detail": "The four-panel rig that flatters the Knot ruined the eye: big rectangular lightformers reflect off a sphere as literal grey rectangles and read as CG instantly. Separately, a bloom threshold that keeps glass clean swallows emissive particles entirely. Two different assets, same conclusion — which is why it became rule R-02.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "L-03",
+      "sign": "neg",
+      "lesson": "Never nest transmission passes.",
+      "detail": "Each transmission material forces its own full-scene render. Putting one inside another's pass tanked the frame hard enough that headless screenshots timed out. Clearcoat and iridescence read as glass perfectly well when something in front is doing the real refracting.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "L-04",
+      "sign": "neg",
+      "lesson": "Particles alone read as dust. Liquid needs a luminous body.",
+      "detail": "Five versions. Bright and dense it swamped the glass and looked like glowing rope; small and sparse it looked like dirt in a tube. The fix was structural, not numeric — a dimmer inner tube of additive colour with the points riding on top as detail. Worth noting that four rounds of tuning numbers preceded the one structural change that worked.",
+      "from": "glass-helix"
+    },
+    {
+      "id": "L-05",
+      "sign": "neg",
+      "lesson": "Hard refraction turns points into stripes.",
+      "detail": "At ior 1.44 the tube facets bent the particles behind them into diagonal bands that read as scales on a snake. Glass that refracts hard is beautiful over an empty background and ruinous over something you actually want to see through it.",
+      "from": "glass-helix"
+    },
+    {
+      "id": "L-06",
+      "sign": "neg",
+      "lesson": "Leva persists control values by path, not by component lifetime.",
+      "detail": "Remounting a component does not reset its values, so per-asset defaults silently did nothing until the control folders were scoped per asset. Applies to any future asset switcher.",
+      "from": "glass-knot"
+    },
+    {
+      "id": "L-07",
+      "sign": "pos",
+      "lesson": "Anything randomly placed gets a seeded PRNG.",
+      "detail": "An asset that rolls a different arrangement on every refresh cannot be art-directed — you would be tuning something that will not exist on the next reload. Determinism is a prerequisite for taste, not a nicety.",
+      "from": "glass-eye"
+    },
+    {
+      "id": "L-08",
+      "sign": "pos",
+      "lesson": "Alive at rest, surges when pushed — a one-line difference with a large perceptual one.",
+      "detail": "flow += delta * (drift + |scrollVelocity| * surge). Drift is never zero, so the page keeps breathing when the user stops. Tie the motion to scroll alone and the page dies in their hands the moment they stop moving.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-09",
+      "sign": "pos",
+      "lesson": "Cards should be real DOM anchors over the canvas, not geometry inside it.",
+      "detail": "Real <a> elements positioned by projecting world coordinates to screen pixels each frame. Keyboard-navigable, screen-reader-readable, indexable, and browser-rendered text simply looks better than text in a texture. Opacity, pointer-events and tabIndex all follow camera distance, so a faded card is not a click or tab target.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-10",
+      "sign": "pos",
+      "lesson": "Decoupling scroll from pixels works exactly as intended.",
+      "detail": "The span is set in viewport units, so the journey is the same length everywhere. Measured 7700/1100 on desktop and 2940/420 on a phone — identical 7.00 viewport-widths. A phone and an ultrawide travel the same distance at different scales.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-11",
+      "sign": "neg",
+      "lesson": "Fitting a fixed world-width to the frame is NOT enough, and this was the real finding.",
+      "detail": "The textbook answer — compute camera distance so a chosen world-width always fits — is right on desktop and wrong on portrait, where it retreats until the form is a thread floating in empty space. Technically correct framing, visually dead. Scaling the visible span with aspect as well takes it from broken to acceptable, not to good. The honest fix is a rotated vertical variant designed as its own composition, and it has not been built.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-12",
+      "sign": "neg",
+      "lesson": "A full-screen scroll proxy must come before the interactive layers, and its wheel listener belongs on window.",
+      "detail": "In the first version the proxy sat over the cards and swallowed every click. With the listener on the scroller instead of window, scrolling stopped working whenever the cursor was over a card.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-13",
+      "sign": "neg",
+      "lesson": "Framerate cannot be measured from the build environment, so it is not measured at all here.",
+      "detail": "The browser these pages are built through renders on the CPU. Any framerate it reported would be meaningless. Every performance change in this log is an arithmetic reduction in work — fewer pixels, fewer passes — not an observed gain. The live stats panel running on a real GPU is the only evidence, and nobody has read it out yet.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-14",
+      "sign": "neg",
+      "lesson": "Geometry rebuilt in useMemo leaks unless the previous buffer is disposed.",
+      "detail": "The merged tube geometries were rebuilt on every parameter change and never freed, so dragging a slider leaked GPU memory until the tab closed. Found incidentally during the perf pass, which is usually how this kind of thing surfaces.",
+      "from": "glass-helix"
+    }
+  ],
+
+  "perf_levers": [
+    {"lever": "pixel ratio", "was": "fixed [1, 2]", "now": "adaptive 0.75–2.0", "saving": 44, "why": "Cost scales with the square, so 2.0 → 1.5 is 44% fewer pixels shaded."},
+    {"lever": "transmission resolution", "was": "512", "now": "256", "saving": 75, "why": "This material re-renders the whole scene into a buffer every frame; halving the edge is a quarter of the pixels."},
+    {"lever": "backside", "was": "on", "now": "off", "saving": 50, "why": "Renders the mesh a second time through that pass — the most expensive checkbox on the page."},
+    {"lever": "composer multisampling", "was": "8", "now": "2", "saving": 75, "why": "Full-screen MSAA on every pass. Bloom hides much of what it buys."}
+  ],
+
+  "open": [
+    {
+      "id": "Q-01",
+      "q": "The rotated vertical variant for portrait is still not built.",
+      "why": "The one thing the scroll test genuinely failed. The mitigation in place is acceptable, not good, and everyone involved knows the difference.",
+      "blocks": "L-11"
+    },
+    {
+      "id": "Q-02",
+      "q": "Persistent canvas — the only decision here with a deadline.",
+      "why": "If the WebGL context unmounts between pages you get a white flash and a shader recompile, and the illusion breaks completely. Hiding that seam means one application with a context that never dies and DOM content swapping around it. It cannot be retrofitted, so it has to be decided before anything real is scaffolded. It also settles a second question: whether the linked pages are further WebGL worlds or conventional documents."
+    },
+    {
+      "id": "Q-03",
+      "q": "The vehicle is not formally locked.",
+      "why": "Both studies are R3F and it works, so it is the de-facto answer — but vanilla Three (dropping the React overhead for a pure performance showcase) and WebGPU/TSL (newer, rougher, genuinely ahead) were never formally ruled out."
+    },
+    {
+      "id": "Q-04",
+      "q": "Nobody has read a framerate off a real GPU yet.",
+      "why": "The stats panel exists in both studies for exactly this. Until someone opens it on real hardware, every performance claim in this log is arithmetic rather than evidence. See L-13."
+    },
+    {
+      "id": "Q-05",
+      "q": "Composition is untested — everything here is one object, centred, on black.",
+      "why": "The friendliest possible case, and the premise has only been tested inside it. Multi-element scenes with foreground, midground and background are where procedural work usually starts looking like a shader demo rather than a place."
+    },
+    {
+      "id": "Q-06",
+      "q": "In-scene typography is untested.",
+      "why": "Text living inside the 3D scene rather than in the DOM layer over it. Different problem from the card anchors, which are solved."
+    },
+    {
+      "id": "Q-07",
+      "q": "Whether an articulated form following a spline needs modeling at all.",
+      "why": "Repeated segments instanced along a curve is a procedural strength, not a weakness. It was conceded as needing real geometry and never actually tested — a cheap study, still unbuilt."
+    },
+    {
+      "id": "Q-08",
+      "q": "The house-style risk, which is art direction rather than technique.",
+      "why": "Procedural work has a look. A great deal of it is technically extraordinary and completely anonymous — it reads as a shader demo. The gap between that and something that reads as a place built with intent is composition and restraint, and no amount of craft in this log closes it."
+    }
+  ]
+}

@@ -7,9 +7,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "BASE_PATH=/ vite",
-    "build": "vite build",
+    "build": "python3 log/check_manifest.py && vite build",
     "preview": "vite preview",
-    "new": "node scripts/new-example.mjs"
+    "new": "node scripts/new-example.mjs",
+    "log": "python3 log/gen_log.py",
+    "log:check": "python3 log/check_manifest.py"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
