@@ -14,7 +14,7 @@ Four things, in order of how much doubt there was.
 
 **Does "alive at rest, surges when pushed" actually feel different?** The flow accumulator advances by `delta * (drift + |scrollVelocity| * surge)`. Drift is never zero, so the page keeps breathing when the user stops. Tie particles to scroll alone and the page dies in their hands the moment they stop moving — it's a one-line difference and a large perceptual one.
 
-**Can cards be real links?** Yes, and they should be. They're `<a>` elements in a normal DOM layer, positioned by projecting their world position to screen pixels each frame. Keyboard-navigable, screen-reader-readable, indexable, browser-rendered text. They fade with distance from the camera so they arrive and leave rather than popping.
+**Can cards be real links?** Yes, and they should be. They're `<a>` elements in a normal DOM layer, positioned by projecting their world position to screen pixels each frame. Keyboard-navigable, screen-reader-readable, indexable, browser-rendered text. They fade with distance from the camera so they arrive and leave rather than popping. They now sit on WebGL glass panels — see below — but the anchors themselves are unchanged.
 
 **Does the responsive strategy hold?** Partly. See below — this is the useful result.
 
@@ -73,6 +73,22 @@ Iridescence is three offset cosines driven by the viewing angle. No texture, and
 The flakes ride the *identical* orbit as the dust — the same GLSL and the same update function, pulled into `scene/orbit.js` and consumed by both.
 
 Copying the shader would have satisfied "behaves the same way as the dust" on the first day and broken it the first time either one was tuned. That breakage is invisible: nothing errors, the two just quietly stop agreeing. Sharing the code makes sameness structural instead of remembered — the same principle the generated log runs on.
+
+## The panels
+
+Large frosted slabs standing forward of the form, carrying the navigation and overlapping the helix without hiding it.
+
+**Half WebGL, half DOM, on purpose.** Real refraction can only come from WebGL, but the cards were this example's actual finding — real anchors with keyboard navigation, screen-reader text and browser-rendered type. Rebuilding them in WebGL would have bought the material by giving back the result. So the glass is a mesh in the scene and the label stays a DOM anchor on top of it. The one stated cost: **flakes cross in front of the glass but never in front of the type.**
+
+The panel is an extruded rounded rectangle with a bevel. The bevel is most of why it reads as a slab rather than a decal — it gives the rim a surface at an angle to the face, so the edge picks up the key and bends what's behind it instead of stopping dead. All five are merged into **one** geometry, the same trick the helix uses for its two strands: the transmission material re-renders the whole scene into a buffer every frame, so five separate panels would mean five extra full scene renders on top of the one the tube already costs.
+
+Flakes orbit out to about 3.9 and the panel face stands at 1.75, so they cross in front of it now and then without being told to.
+
+**The first version was invisible, and that's the useful part.** It was physically correct glass — transmission 1, low roughness, real thickness — and could only be located by the smear it made of the form behind it. A debug pass with an opaque material showed the panel exactly where it should be, at the right size, correctly aligned with its label. The geometry was never wrong: **clear glass on a near-black background has nothing to reflect.** A real panel is found by its edges first, so the edge is now drawn as its own additive ring just proud of the front face, and the surface is frosted enough to scatter the key across itself rather than returning it at a single angle.
+
+Surface texture is a procedural grain map — fine noise plus a low-frequency vertical streak, generated on a canvas at runtime, no external asset.
+
+**Still open:** the panels don't fade with distance but their labels do. The glass is scenery and sits in the world permanently, so at the frame edges you can get a visible panel with no text on it. That may read as natural or as an oversight; only watching it move will tell.
 
 ## Lighting
 

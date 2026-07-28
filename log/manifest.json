@@ -68,6 +68,12 @@
       "rule": "Shared behaviour lives in shared code.",
       "why": "When two things are specified to move the same way, put the motion in one module both consume. Copies satisfy the requirement once and then diverge silently under tuning — nothing errors, they just stop agreeing, and the drift is invisible until someone notices the scene looks wrong.",
       "from": "L-24"
+    },
+    {
+      "id": "R-10",
+      "rule": "Verify a backup by restoring it.",
+      "why": "Writing the file proves the write succeeded and nothing else. Clone the bundle, extract the archive, compare against the original, and record how to do it next to the files. A restore point discovered to be bad at the moment it is needed is worse than none, because it was counted on.",
+      "from": "L-30"
     }
   ],
   "assets": [
@@ -498,6 +504,48 @@
           "why": "Lee preferred a render that had been over-driven purely to demonstrate the mechanism. The literal reading — widen the flash until everything flashes — would have bought the colour back by destroying the event the flash represents. The preference was pointing at the grey between flashes, which was a fault rather than a setting."
         }
       ]
+    },
+    {
+      "id": "card-panels",
+      "name": "Panels",
+      "example": "002-scroll-helix",
+      "born": "2026-07-28",
+      "status": "active",
+      "line": "Large frosted glass slabs standing forward of the form, carrying the navigation and overlapping the helix without hiding it.",
+      "geometry": "5 extruded rounded rectangles with bevelled edges, merged into one geometry, plus a separate flat ring for the rim",
+      "authored_geometry": 0,
+      "made_of": "Half WebGL and half DOM, on purpose. The panel is an extruded rounded rectangle with a bevel — the bevel is most of why it reads as a slab rather than a decal, since it gives the rim a surface at an angle to the face that can pick up the key and bend what is behind it. The label stays a real DOM anchor sitting on top, because that was this example's actual finding and it is not worth trading for a material. All five panels are merged into ONE geometry: the transmission material re-renders the whole scene into a buffer every frame, so five separate panels would have meant five extra full scene renders per frame on top of the one the tube already costs.",
+      "recipe": {
+        "size": "3.6 x 2.1, lifted 1.35 above or below the axis, standing at z 1.75",
+        "overlap": "the lift is small enough that the panel covers the near half of the form and lets the rest read around it",
+        "edge": "drawn as its own additive ring just proud of the front face, because clear glass on black has nothing to reflect and is found by its edges first",
+        "surface": "roughness 0.28 with a procedural grain map — fine noise plus a low-frequency vertical streak, generated on a canvas, no external asset",
+        "glass": "transmission 0.92, ior 1.42, chromatic aberration 0.18, clearcoat 0.8",
+        "depth ordering": "panels write depth, so the flakes orbiting out to ~3.9 cross in front of a face standing at 1.75 now and then, which was the point",
+        "placement": "x and side are fixed per card; the world position is derived once and consumed by both the glass and the DOM anchor, so they cannot drift apart"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-28",
+          "kind": "born",
+          "ask": "A-18",
+          "lessons": [
+            "L-29"
+          ],
+          "change": "Built as glass behind the existing DOM cards rather than as a replacement for them. Panels stand forward of the form, overlap it without hiding it, and keep the alternating above/below placement.",
+          "why": "The cards were the thing this example proved. Rebuilding them in WebGL would have bought real refraction by giving back keyboard navigation, screen readers, indexable text and browser-rendered type. Putting the glass behind the anchor keeps both results at one stated cost."
+        },
+        {
+          "date": "2026-07-28",
+          "kind": "failure",
+          "ask": "A-18",
+          "lessons": [
+            "L-28"
+          ],
+          "change": "First version was invisible. Physically correct glass — transmission 1, low roughness, real thickness — on a near-black background reflects nothing, so the panel could only be located by the smear it made of the form behind it.",
+          "why": "Found by swapping in an opaque debug material, which showed the panel exactly where it should be, at the right size, correctly aligned with its label. The geometry was never wrong; the scene gave the material nothing to return. Fixed by drawing the edge as real geometry and frosting the face enough to scatter the key across it."
+        }
+      ]
     }
   ],
   "asks": [
@@ -622,6 +670,22 @@
       "summary": "Picked the deliberately over-driven test render over the tuned default, which surfaced a real flaw in how the plates were coloured rather than just a preference for brighter.",
       "effect": "Hue and flash were decoupled. The plates now carry iridescence all the time and catching the light adds brightness on top, instead of the flash being the only source of colour.",
       "kind": "taste"
+    },
+    {
+      "id": "A-17",
+      "date": "2026-07-28",
+      "verbatim": "But first, back up what we have so that we dont lose it as we work forward",
+      "summary": "Asked for a restore point before the next piece of work began.",
+      "effect": "A tagged checkpoint with three independent copies — an annotated tag and release on the remote, and a full-history bundle plus a worktree archive kept locally. Both local copies were verified by restoring them and diffing, not just written.",
+      "kind": "process"
+    },
+    {
+      "id": "A-18",
+      "date": "2026-07-28",
+      "verbatim": "They need to be larger, and look like glass panels, with depth and texture, while being mostly transparent, but also reflective and they should overlay a protion of the double helix, but not entirely. I like how some are on top and some are on bottom, but they need to stand out as forground with the exception that the hexes may occasionally pass in front of them",
+      "summary": "Asked for the navigation cards to become large glass panels standing forward of the form, overlapping it without hiding it, with the flakes still able to cross in front.",
+      "effect": "Panels. Kept the cards as real DOM anchors and put the glass behind them, so the accessibility result this example produced was not traded away for a material.",
+      "kind": "direction"
     }
   ],
   "lessons": [
@@ -813,6 +877,27 @@
       "lesson": "When a taste call points at an over-driven test render, find what it is actually pointing at.",
       "detail": "A render made purely to prove a mechanism was preferred to the tuned default. Taking that literally would have meant widening the flash until every plate flashed constantly — which buys the colour back by destroying the event the flash exists to represent. The real fault was underneath: hue was driven by the flash, so a plate not currently catching the light had no colour at all and the field sat grey between flashes. Separating the two gives the brightness that was actually wanted and keeps the behaviour that was asked for a message earlier. A preference between two pictures is evidence about the pictures, not an instruction about the parameters that produced them.",
       "from": "hex-plates"
+    },
+    {
+      "id": "L-28",
+      "sign": "pos",
+      "lesson": "Clear glass on a dark background is invisible, because there is nothing for it to reflect.",
+      "detail": "The first panel was physically correct — transmission 1, low roughness, real thickness — and could only be located by the smear it made of the form behind it. A debug pass with an opaque material proved it was exactly where it should be, the right size, correctly aligned with its label. The material was not wrong; the environment gave it nothing to return. A real panel is found by its edges first, so the edge is now drawn as its own geometry rather than left to the material to imply, and the face is frosted enough to scatter the key across itself instead of returning it at one angle.",
+      "from": "card-panels"
+    },
+    {
+      "id": "L-29",
+      "sign": "pos",
+      "lesson": "When a material change threatens an earlier result, put the material behind it rather than in place of it.",
+      "detail": "The cards were the thing this example proved: real DOM anchors, keyboard-navigable, screen-reader-readable, browser-rendered text, positioned from world space. Glass with real refraction can only come from WebGL. Rebuilding the cards in WebGL would have bought the material by giving back the finding. Putting the panel in the scene and leaving the text in the DOM on top of it keeps both, at one stated cost: the flakes cross in front of the glass but never in front of the type.",
+      "from": "card-panels"
+    },
+    {
+      "id": "L-30",
+      "sign": "pos",
+      "lesson": "A backup that has not been restored from is a claim, not a backup.",
+      "detail": "The bundle was checked by cloning from it into a scratch directory and comparing tree hashes against the live repo; the archive by extracting it and diffing against the working tree. Both matched. That is a different statement from 'the file was written and is 483K'. Worth the two extra commands every time — and the restore notes record the one confusing detail, that git bundle verify has to run from inside a repo and reports a bad-bundle-looking error from anywhere else.",
+      "from": "card-panels"
     }
   ],
   "perf_levers": [
@@ -902,6 +987,11 @@
       "id": "Q-12",
       "q": "Whether the flakes want to be scarcer and larger still.",
       "why": "The brief said rare and much bigger, and the defaults are one reading of that — 220 plates at a size where a couple are catching light in frame at any moment. Twice the size and half the number is a different picture and might be the better one. Only an eye on real hardware can pick."
+    },
+    {
+      "id": "Q-13",
+      "q": "The panels do not fade with distance but their labels do.",
+      "why": "The DOM anchors fade with camera distance so they arrive and leave rather than popping. The glass does not — it is scenery and sits in the world permanently. At the frame edges that can mean a visible panel with no text on it. It may read as perfectly natural or as an oversight, and only watching it move will tell."
     }
   ]
 }

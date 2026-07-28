@@ -15,7 +15,9 @@
     "sparkle",
     "half-lambert",
     "instancing",
-    "iridescence"
+    "iridescence",
+    "glass-panels",
+    "hybrid-dom-webgl"
   ],
   "interaction": "horizontal scroll",
   "stack": [
@@ -28,5 +30,5 @@
   "difficulty": 3,
   "reusable_as": "full-site scroll shell",
   "date": "2026-07-24",
-  "notes": "The capability test for scroll-driven navigation. Horizontal scroll moves a camera along a static glass helix; particles inside drift on their own and surge with scroll velocity. Cards are real DOM anchors positioned by projecting world coordinates. Tests the responsive strategy — normalised progress, aspect-driven camera distance — and the hide-the-seams principle. A later addition, the dust, orbits very small motes around the form's long axis — coherent and streaming under scroll, turbulent and wandering at rest, with a subset that catches the light. Lit from one shared direction consumed by the environment, a lamp, the core's baked vertex shading and both particle shaders. A third element, the flakes, adds rare oversized hexagonal plates that tumble like falling snow and flash iridescent when a face catches the light; they share the dust's orbital motion through one module rather than a copy."
+  "notes": "The capability test for scroll-driven navigation. Horizontal scroll moves a camera along a static glass helix; particles inside drift on their own and surge with scroll velocity. Cards are real DOM anchors positioned by projecting world coordinates. Tests the responsive strategy — normalised progress, aspect-driven camera distance — and the hide-the-seams principle. A later addition, the dust, orbits very small motes around the form's long axis — coherent and streaming under scroll, turbulent and wandering at rest, with a subset that catches the light. Lit from one shared direction consumed by the environment, a lamp, the core's baked vertex shading and both particle shaders. A third element, the flakes, adds rare oversized hexagonal plates that tumble like falling snow and flash iridescent when a face catches the light; they share the dust's orbital motion through one module rather than a copy. The navigation cards now sit on merged extruded glass panels standing forward of the form; the anchors stay in the DOM so keyboard and screen-reader access survive the material."
 }

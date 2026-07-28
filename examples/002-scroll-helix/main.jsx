@@ -1,4 +1,4 @@
-import { StrictMode, useRef, useState } from 'react'
+import { StrictMode, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Canvas } from '@react-three/fiber'
 import { Environment, Stats } from '@react-three/drei'
@@ -8,6 +8,7 @@ import { HelixLights, HelixTube } from './scene/HelixTube.jsx'
 import { HelixParticles } from './scene/HelixParticles.jsx'
 import { DustVeil } from './scene/DustVeil.jsx'
 import { HexPlates } from './scene/HexPlates.jsx'
+import { CardPanels } from './scene/CardPanels.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
 import { KEY, useLightDirection } from './scene/lighting.js'
 import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
@@ -20,14 +21,15 @@ const LENGTH = 60
 const TRAVEL = 42
 const TURNS = 17
 
-// Stand-ins for real navigation. Placed along the helix; the DOM elements are
-// positioned by projecting these world coordinates every frame.
+// Stand-ins for real navigation. Only x and which side they sit on are fixed
+// here — the actual world position is derived below, so the glass panel and the
+// DOM anchor are placed from one calculation and cannot drift apart.
 const CARDS = [
-  { label: 'Index', meta: '00', href: '../../', position: [-17, 2.3, 0] },
-  { label: 'Catalogue', meta: '01', href: '../001-glass-catalogue/', position: [-8, -2.3, 0] },
-  { label: 'Source', meta: '02', href: 'https://github.com/Elifterminal/ATexamples', position: [1, 2.3, 0] },
-  { label: 'Conventions', meta: '03', href: 'https://github.com/Elifterminal/ATexamples/blob/main/docs/CONVENTIONS.md', position: [10, -2.3, 0] },
-  { label: 'Readme', meta: '04', href: 'https://github.com/Elifterminal/ATexamples#readme', position: [18, 2.3, 0] },
+  { label: 'Index', meta: '00', href: '../../', x: -17, side: 1 },
+  { label: 'Catalogue', meta: '01', href: '../001-glass-catalogue/', x: -8, side: -1 },
+  { label: 'Source', meta: '02', href: 'https://github.com/Elifterminal/ATexamples', x: 1, side: 1 },
+  { label: 'Conventions', meta: '03', href: 'https://github.com/Elifterminal/ATexamples/blob/main/docs/CONVENTIONS.md', x: 10, side: -1 },
+  { label: 'Readme', meta: '04', href: 'https://github.com/Elifterminal/ATexamples#readme', x: 18, side: 1 },
 ]
 
 function Scene({ scroll, cardRefs }) {
@@ -119,6 +121,40 @@ function Scene({ scroll, cardRefs }) {
     tightness: { value: 18, min: 1, max: 80, step: 1 },
   })
 
+  // The panels sit in FRONT of the form (positive z) and overlap it vertically
+  // without covering it — lift is small enough that the helix reads through and
+  // around the glass rather than being hidden by it. The flakes orbit out to
+  // ~3.9, well past the panel face, so they cross in front of it now and then.
+  const card = useControls('cards', {
+    width: { value: 3.6, min: 0.8, max: 9, step: 0.05 },
+    height: { value: 2.1, min: 0.4, max: 6, step: 0.05 },
+    lift: { value: 1.35, min: 0, max: 5, step: 0.05 },
+    z: { value: 1.75, min: -2, max: 5, step: 0.05 },
+    depth: { value: 0.16, min: 0.01, max: 1, step: 0.005 },
+    radius: { value: 0.22, min: 0, max: 1.2, step: 0.01 },
+    bevel: { value: 0.035, min: 0, max: 0.2, step: 0.005 },
+    ior: { value: 1.42, min: 1, max: 2.4, step: 0.01 },
+    roughness: { value: 0.28, min: 0, max: 1, step: 0.005 },
+    transmission: { value: 0.92, min: 0, max: 1, step: 0.01 },
+    rim: { value: 0.035, min: 0, max: 0.3, step: 0.005 },
+    rimGlow: { value: 0.75, min: 0, max: 3, step: 0.01 },
+    thickness: { value: 0.5, min: 0, max: 4, step: 0.01 },
+    chroma: { value: 0.18, min: 0, max: 1, step: 0.01 },
+    distortion: { value: 0.12, min: 0, max: 1, step: 0.01 },
+    tint: '#9fc4ff',
+    grain: { value: 0.35, min: 0, max: 1, step: 0.01 },
+    grainScale: { value: 3, min: 0.25, max: 12, step: 0.25 },
+    panelRes: { value: 256, options: { '128 (cheapest)': 128, 256: 256, 512: 512 } },
+  })
+
+  // One calculation, two consumers: the glass and the DOM anchors.
+  const placed = useMemo(
+    () => CARDS.map((c) => ({ ...c, position: [c.x, c.side * card.lift, card.z] })),
+    [card.lift, card.z],
+  )
+
+  const positions = useMemo(() => placed.map((c) => c.position), [placed])
+
   // Rare, much larger, and the only thing in the sheath with a face. They ride
   // the identical orbit as the dust — shared code, not a second copy — but a
   // plate can turn, and turning is what lets it catch the light and then vanish
@@ -149,7 +185,7 @@ function Scene({ scroll, cardRefs }) {
         travel={TRAVEL}
         visibleWidth={form.visibleWidth}
         damping={form.damping}
-        cards={CARDS}
+        cards={placed}
         cardRefs={cardRefs}
       />
 
@@ -257,6 +293,27 @@ function Scene({ scroll, cardRefs }) {
         direction={direction}
         ambient={light.ambient}
         contrast={light.contrast}
+      />
+
+      <CardPanels
+        positions={positions}
+        width={card.width}
+        height={card.height}
+        depth={card.depth}
+        radius={card.radius}
+        bevel={card.bevel}
+        resolution={card.panelRes}
+        ior={card.ior}
+        roughness={card.roughness}
+        transmission={card.transmission}
+        rim={card.rim}
+        rimGlow={card.rimGlow}
+        thickness={card.thickness}
+        chroma={card.chroma}
+        distortion={card.distortion}
+        tint={card.tint}
+        grain={card.grain}
+        grainScale={card.grainScale}
       />
 
       {/* Default multisampling is 8. Dropping it is one of the largest single
