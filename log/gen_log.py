@@ -491,6 +491,7 @@ h3{font-size:15px;margin:26px 0 8px}
 h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);
  margin:22px 0 8px}
 .sub{color:var(--mut);font-size:14px;margin:0}
+.kicker{color:var(--mut);font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 .35rem}
 .tag{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
  padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mut);margin-right:6px}
 .tag.warn{color:var(--warn);border-color:var(--warn)}
@@ -580,13 +581,14 @@ def build() -> str:
 
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{e(p["title"])} &mdash; procedural WebGL study</title>
+<title>{e(p["project"])} &mdash; {e(p["kind"].lower())}</title>
 <meta name="description" content="{e(p["sub"][:180])}">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%237dd3fc' stroke-width='3'/%3E%3C/svg%3E">
 <style>{CSS}</style></head><body><div class="wrap">
 
 <header>
-<h1>{e(p["title"])}</h1>
+<p class="kicker">{e(p["kind"])}</p>
+<h1>{e(p["project"])}</h1>
 <p class="sub">{e(p["sub"])}</p>
 </header>
 

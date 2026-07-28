@@ -28,7 +28,7 @@ const CARDS = [
   { label: 'Index', meta: '00', href: '../../', x: -17, side: 1 },
   { label: 'Catalogue', meta: '01', href: '../001-glass-catalogue/', x: -8, side: -1 },
   { label: 'Source', meta: '02', href: 'https://github.com/Elifterminal/ATexamples', x: 1, side: 1 },
-  { label: 'Conventions', meta: '03', href: 'https://github.com/Elifterminal/ATexamples/blob/main/docs/CONVENTIONS.md', x: 10, side: -1 },
+  { label: 'Asset log', meta: '03', href: '../../log/', x: 10, side: -1 },
   { label: 'Readme', meta: '04', href: 'https://github.com/Elifterminal/ATexamples#readme', x: 18, side: 1 },
 ]
 

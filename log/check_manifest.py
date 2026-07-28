@@ -117,6 +117,35 @@ for i in M["premise"]["evidence"]:
     if i not in ASSET_IDS:
         err(f"premise: evidence '{i}' is not an asset")
 
+# ---- identity -------------------------------------------------------------
+
+# A living page belongs to ONE project and has to say which, in its own name.
+# This page was published for weeks titled "Asset Log", which is a document type
+# rather than a project — so it read as a generic sibling of every other page
+# built in this format instead of as this study's own record. Keeping the private
+# project name off a public page is a separate requirement (below) and is NOT
+# satisfied by having no name at all.
+GENERIC_TITLES = {
+    "asset log", "log", "logs", "notebook", "living page", "findings",
+    "index", "study", "notes", "record", "project", "readme", "docs",
+}
+
+page = M["page"]
+
+for field in ("project", "kind"):
+    if not page.get(field, "").strip():
+        err(f"page.{field} is missing — a living page has to name the project it belongs to")
+
+project = page.get("project", "").strip()
+
+if project.lower() in GENERIC_TITLES:
+    err(f"page.project is '{project}', which is a kind of document rather than a project. "
+        f"Name the project itself, or this page cannot be told apart from any other "
+        f"log built in this format.")
+
+if len(project) < 3:
+    err(f"page.project '{project}' is too short to identify anything")
+
 # ---- the boundary ---------------------------------------------------------
 
 blob = json.dumps(M).lower()
@@ -126,10 +155,20 @@ for term in FORBIDDEN:
 
 page_path = REPO / "public" / "log" / "index.html"
 if page_path.exists():
-    page = page_path.read_text().lower()
+    rendered = page_path.read_text()
+    lowered = rendered.lower()
+
     for term in FORBIDDEN:
-        if term in page:
+        if term in lowered:
             err(f"generated page contains '{term}' — this page is public, that name is not")
+
+    # The identity has to survive into the page, not just sit in the manifest.
+    heading = re.search(r"<h1[^>]*>(.*?)</h1>", rendered, re.S)
+    if not heading:
+        err("generated page has no <h1> — nothing tells a reader whose page this is")
+    elif project and project.lower() not in heading.group(1).lower():
+        err(f"the page's <h1> is '{heading.group(1).strip()}' but the project is "
+            f"'{project}' — the heading has to name the project")
 
 # ---- the page matches the manifest ----------------------------------------
 
