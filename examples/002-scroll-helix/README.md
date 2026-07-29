@@ -166,7 +166,7 @@ Glass roughness went from 0.04 to 0.1 with a clearcoat on top: mirror-smooth ret
 - **Card arrival** — opacity ramps with camera distance; `pointer-events` and `tabIndex` follow it, so a faded card isn't a click or tab target.
 - **Section boundaries** — there are none. One camera, one continuous object.
 - **The light** — one direction, shared. Four rigs that disagree is its own kind of seam, and the least visible one until you notice everything looks flat.
-- **Still open: the page transition.** Clicking a card here does a normal page load, which is the one seam still fully visible. Hiding it needs a persistent WebGL context with DOM swapping around it, and that's an architectural decision rather than a tweak.
+- **Still open, and now the first thing: the page transition.** Clicking a card does a normal page load — the one seam in this study still fully visible, and the only one that can't be closed by tuning something. Carrying the world across a navigation needs a WebGL context that outlives the page, with the DOM swapping around it. That was an architectural decision worth deferring while this was one page. It stops being deferrable the moment there is a second one, which is the next piece of work.
 
 ## Performance
 
@@ -209,6 +209,8 @@ helix multiplies segment count by its number of turns.
 ## Known
 
 The card links are stand-ins pointing at real pages in this repo, not a designed navigation.
+
+**This page is finished for effects.** Every element on it earned its place, and it still reached the point where the next good decision was to stop adding. Nothing in the build tells you when that is — each addition rendered correctly and looked defensible on its own, and one more always would have. Density is a judgement about the whole page, made from outside it. What comes next is narrative across linked pages, which is not a rendering problem.
 
 ## Sharing it
 

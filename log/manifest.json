@@ -4,18 +4,23 @@
     "project": "ATexamples",
     "kind": "Asset log",
     "sub": "The living record of one study: a set of scroll-driven WebGL forms built out of formulas instead of 3D models. Every asset in this repo, how it was made, every time it changed, and who asked for the change. Dead ends included.",
-    "updated": "2026-07-28",
+    "updated": "2026-07-29",
     "repo": "https://github.com/Elifterminal/ATexamples"
   },
   "premise": {
     "claim": "You can reach a convincing 3D asset without authoring any geometry, if the treatment carries it.",
-    "status": "held",
-    "settled": "2026-07-24",
-    "scope": "One form at a time, centred, on a near-black background, in glass. Not yet tested on composed multi-element scenes, which is where it is expected to get hard.",
+    "status": "held — and confirmed by the director",
+    "settled": "2026-07-29",
+    "scope": "Now tested well past one form on black: a scroll-driven page carrying three particle systems, frosted glass panels with footage behind them, and one shared light, all without an engine. Lee's verdict: \"this is proving we dont need to run the webgl and three js through a engine.\" Still untested on a multi-page site, which is the next thing and is not a rendering question.",
     "evidence": [
       "glass-knot",
       "glass-eye",
-      "glass-helix"
+      "glass-helix",
+      "scroll-helix",
+      "smoke-veil",
+      "hex-plates",
+      "card-panels",
+      "card-screens"
     ]
   },
   "rules": [
@@ -99,6 +104,12 @@
       "rule": "Decode only what is near.",
       "why": "One video per card means one decoder per card, and five running at once is how a page like this stutters on a laptop. Play inside a radius wider than the fade, so a panel is already running by the time it can be seen, and pause everything else.",
       "from": "L-39"
+    },
+    {
+      "id": "R-15",
+      "rule": "Stop adding before it is obvious you should have.",
+      "why": "Each effect here was justified on its own and the page still filled up. Nothing in the build tells you when to stop, because every individual addition renders correctly and looks defensible in isolation. Density is a decision made about the whole page, from outside it.",
+      "from": "L-41"
     }
   ],
   "assets": [
@@ -827,6 +838,14 @@
       "summary": "One clip per card, from open-licensed animation, translucent enough to keep the scene visible behind them.",
       "effect": "Five loops cut from the Blender Foundation's open movies, one per panel, each with its own decoder that only runs when the camera is near it. The transparency answer was not the one that sounded right.",
       "kind": "direction"
+    },
+    {
+      "id": "A-23",
+      "date": "2026-07-29",
+      "verbatim": "You dont want to over cook any single page, so the home page is probably full enough with different design effects. The next step, which will require some thought, is making linked pages that extend the narrative that the homepage is developing.",
+      "summary": "Called this page finished for effects and named the next problem as narrative across linked pages rather than more technique on one.",
+      "effect": "A deliberate stop. Nothing was added in response to this — the direction is that the answer to 'what next' is no longer a rendering question, and the page transition is the first thing that has to be decided.",
+      "kind": "direction"
     }
   ],
   "lessons": [
@@ -1109,6 +1128,13 @@
       "lesson": "Trailers are mostly title cards. Look at the footage before cutting from it.",
       "detail": "Five clips cut from two trailers on plausible-looking timestamps came back as three title cards, a fade to black, and two usable shots. Sampling a frame per second and building a contact sheet showed the actual structure: the source cuts to a title every two or three seconds, so the usable runs are short and have to be found rather than guessed. The loops are seamless by crossfading the tail back onto the head rather than by palindrome — a palindrome is simpler and reads as rewind on character animation, which a rabbit walking backwards makes obvious.",
       "from": "card-screens"
+    },
+    {
+      "id": "L-41",
+      "sign": "pos",
+      "lesson": "A page can be finished for effects long before it is finished.",
+      "detail": "Every element here earned its place and the page still reached a point where the next good decision was to stop adding to it. Restraint is not a technical judgement and nothing in this log could have produced it — the effects each worked, none of them was wrong, and one more would still have rendered. It came from the director looking at the whole thing and saying it was full. Worth recording because the failure it avoids leaves no trace: a page that is merely busy looks, from inside the work, exactly like a page that is rich.",
+      "from": "scroll-helix"
     }
   ],
   "perf_levers": [
@@ -1208,6 +1234,11 @@
       "id": "Q-14",
       "q": "What the beams cost, and whether they survive real footage.",
       "why": "Twenty-two additive slices per panel is a lot of overdraw for something this subtle, and it has never been measured on a GPU. The placeholder is also a slow abstract gradient, which is the kindest possible input — real footage cuts, and a beam colour sampled six times a second across a hard cut may strobe."
+    },
+    {
+      "id": "Q-15",
+      "q": "The page transition, which stops being optional the moment there is a second page.",
+      "why": "Clicking a card does a normal page load — the one seam in this study still fully visible, and the only one that cannot be hidden by tuning something. Carrying the world across a navigation needs a WebGL context that outlives the page, with the DOM swapping around it. That is an architecture decision, and it is now the first one, because linked pages are the next piece of work."
     }
   ]
 }
