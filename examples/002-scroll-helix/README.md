@@ -116,7 +116,25 @@ The beam colour is sampled from the footage six times a second, via a 1×1 canva
 
 Five panels suggests five videos, which is five decoders and the reason a page like this stutters on a laptop. One element feeds all five, each taking a different crop of the same frame. It's parked in the document rather than left detached — a detached video decodes in some browsers and quietly doesn't in others, and `display:none` is a documented reason to stop decoding altogether.
 
-`public/media/panel-loop.mp4` is a generated 39KB seamless loop, not footage. This repo carries no media it didn't make. Point the `src` at anything to replace it.
+### The loops
+
+Each card plays its own clip — five short loops cut from the Blender Foundation's open movies (*Big Buck Bunny* and *Sintel*), CC BY 3.0, 284KB for all five. Credits in [`public/media/ATTRIBUTION.md`](../../public/media/ATTRIBUTION.md). Placeholders for a study; `LOOPS` in `main.jsx` is the list to change.
+
+**Trailers are mostly title cards.** Five clips cut on plausible-looking timestamps came back as three title cards, a fade to black, and two usable shots. Sampling a frame per second into a contact sheet showed the real structure — the source cuts to a title every two or three seconds, so the usable runs are short and have to be found rather than guessed.
+
+They loop by **crossfading the tail back onto the head**, not by palindrome. A palindrome is simpler and reads as *rewind* on character animation; a rabbit walking backwards is not a loop.
+
+### Transparency, and the answer that sounded right
+
+"See the background through them" sounds like additive blending, and for the dark end it's exactly right — black contributes nothing, so the helix reads straight through. But a bright frame then saturates, the bloom pass finds it, and the panel becomes a lit rectangle with no picture in it.
+
+**Normal blending under full opacity is see-through everywhere *and* keeps an image everywhere**, which is what was actually wanted. A luma key holds back the dark end so shadows still drop out. Additive stayed as an option — the holographic read is worth having — but it isn't the default.
+
+### One decoder per card, and only when near
+
+Five clips means five decoders, which is how a page like this stutters on a laptop. Each card plays only inside a radius wider than its fade, so it's already running by the time you can see it, and everything else is paused.
+
+That nearly went wrong: the video element is parked in the document, and the append was written inside the `useMemo` that creates it. StrictMode calls `useMemo` twice with no cleanup between, so every card left an orphan behind and five cards were quietly running **ten** decoders — exactly the cost the design existed to avoid. A DOM side effect belongs in an effect, where there's a cleanup to pair with it. Counted, not assumed: five elements, five distinct sources, two decoding.
 
 ## Lighting
 

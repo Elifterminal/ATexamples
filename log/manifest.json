@@ -93,6 +93,12 @@
       "rule": "Let the material do the effect.",
       "why": "Before reaching for a filter, check whether something already in the scene produces it physically. Content placed behind glass is diffused by the glass, and that diffusion cannot drift out of step with the material the way a hand-matched blur would.",
       "from": "L-34"
+    },
+    {
+      "id": "R-14",
+      "rule": "Decode only what is near.",
+      "why": "One video per card means one decoder per card, and five running at once is how a page like this stutters on a laptop. Play inside a radius wider than the fade, so a panel is already running by the time it can be seen, and pause everything else.",
+      "from": "L-39"
     }
   ],
   "assets": [
@@ -594,7 +600,7 @@
       "born": "2026-07-29",
       "status": "active",
       "derived_from": "card-panels",
-      "line": "Footage behind each panel, kept distant by the glass in front of it, throwing raked light forward through it.",
+      "line": "A different loop behind every panel, kept distant by the glass in front of it, throwing raked light forward through it.",
       "geometry": "one plane per panel behind the glass, plus a 22-slice beam in front of each; both merged into single geometries",
       "authored_geometry": 0,
       "made_of": "Two pieces that only make sense together. The screen is never drawn sharp and is never blurred either — the panel in front is frosted and its transmission pass diffuses whatever is behind it, so the material does the work and the setback distance is the whole distance control. The beam is a stack of soft slices lying in the plane the camera always faces, marching along a raked axis and coloured, six times a second, by the average colour of the footage at that moment. One video element feeds all five panels, each taking a different crop of the same frame.",
@@ -607,8 +613,11 @@
         "striation": "two incommensurate frequencies across the beam; without it an unbroken rectangle emits a wash",
         "colour": "sampled from a 1x1 canvas draw of the video, 6 times a second — the browser's own downscale is the averaging",
         "fade": "beams and screens fade with camera distance the same way the labels do, or every panel sprays light at once",
-        "decoders": "one, shared, parked in the document",
-        "placeholder": "public/media/panel-loop.mp4 — 39KB, generated, seamless palindrome loop; swap the src for real footage"
+        "decoders": "one per card, playing only inside a radius wider than the fade",
+        "placeholder": "public/media/panel-loop.mp4 — 39KB, generated, seamless palindrome loop; swap the src for real footage",
+        "sources": "five 1.3-4.2s loops cut from the Blender Foundation's open movies (CC BY 3.0), 284KB total; credits in public/media/ATTRIBUTION.md",
+        "looping": "seamless by crossfading the tail onto the head, not by palindrome — a palindrome reads as rewind on character animation",
+        "transparency": "normal blending under full opacity, plus a luma key that holds back the dark end; additive is available and is not the default"
       },
       "revisions": [
         {
@@ -632,6 +641,18 @@
           ],
           "change": "The beams went wrong twice. First as a hollow frustum lit by a rim term, which drew two hard diagonal lines across the frame — the geometry's own outline rather than light. Then, once softened into slices, as an even wash with no ray structure at all.",
           "why": "Two different mistakes with the same root: treating a beam as a surface. A rim term is right for a shell standing in for an atmosphere and wrong for an open cone. And rays are only legible because something breaks the source up — a plain rectangle emits evenly, so the striation had to be put in deliberately."
+        },
+        {
+          "date": "2026-07-29",
+          "kind": "feature",
+          "ask": "A-22",
+          "lessons": [
+            "L-38",
+            "L-39",
+            "L-40"
+          ],
+          "change": "A different loop per card, cut from open-licensed animation, with per-card decoders that only run near the camera and a transparency that keeps the picture.",
+          "why": "One shared clip across five panels was the cheap version and it read as five copies of one thing. The three things that went wrong are all recorded above: additive blending was the obvious answer to 'see-through' and was wrong at the bright end, the decoders doubled because a DOM append sat inside a useMemo, and the first cut of the clips came back full of title cards because nobody looked at the footage first."
         }
       ]
     }
@@ -797,6 +818,14 @@
       "verbatim": "is it possible to make the glass cards play videos, but, like, videos that look like they remain behind the fogged glass. sort of distant? And that project their light through the glass with god rays?",
       "summary": "Asked for footage behind the panels, kept distant and diffused by the glass, throwing light forward through it.",
       "effect": "Screens and beams. The diffusion turned out to be free — the panel was already frosted and its transmission pass blurs whatever sits behind it — so the work was almost entirely in the light, not the video.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-22",
+      "date": "2026-07-29",
+      "verbatim": "is it possible to have each card play a different video? And even better, are there and open source loops we could use, of like, cartoons or something? ... and if the videos could be somewhat transparent so you can still see the background stuff through them",
+      "summary": "One clip per card, from open-licensed animation, translucent enough to keep the scene visible behind them.",
+      "effect": "Five loops cut from the Blender Foundation's open movies, one per panel, each with its own decoder that only runs when the camera is near it. The transparency answer was not the one that sounded right.",
       "kind": "direction"
     }
   ],
@@ -1058,6 +1087,27 @@
       "sign": "pos",
       "lesson": "One decoder, many surfaces.",
       "detail": "Five panels suggests five videos, which is five decoders running at once and the reason a page like this stutters on a laptop. One element feeds every panel and each takes a different crop of the same frame, which costs nothing and stops them reading as five copies of one thing. The element is parked in the document rather than left detached — a detached video decodes in some browsers and quietly does not in others, and display:none is a documented reason to stop decoding altogether.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-38",
+      "sign": "neg",
+      "lesson": "Additive blending makes the dark end transparent and the bright end worthless.",
+      "detail": "'See the background through them' sounds like additive, and for shadow it is exactly right — black contributes nothing, so the form reads straight through. But a bright frame then saturates, the bloom pass finds it, and the panel becomes a lit rectangle with no picture in it. Normal blending under full opacity is see-through everywhere and keeps an image everywhere, which is what was actually wanted. Additive stayed as an option because the holographic read is worth having; it is not the default.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-39",
+      "sign": "neg",
+      "lesson": "A DOM side effect inside useMemo has no cleanup, so it runs twice and leaves one behind.",
+      "detail": "Each panel builds a video element and parks it in the document. The append was written inside the useMemo that creates the element, which StrictMode calls twice with nothing in between — so every card left an orphaned element in the page and five cards were quietly running ten decoders. Precisely the cost the one-decoder-per-card design existed to control. Moving the append into an effect, where there is a cleanup to pair it with, fixed it. Counted rather than assumed: five elements, five distinct sources, two of them decoding.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-40",
+      "sign": "pos",
+      "lesson": "Trailers are mostly title cards. Look at the footage before cutting from it.",
+      "detail": "Five clips cut from two trailers on plausible-looking timestamps came back as three title cards, a fade to black, and two usable shots. Sampling a frame per second and building a contact sheet showed the actual structure: the source cuts to a title every two or three seconds, so the usable runs are short and have to be found rather than guessed. The loops are seamless by crossfading the tail back onto the head rather than by palindrome — a palindrome is simpler and reads as rewind on character animation, which a rabbit walking backwards makes obvious.",
       "from": "card-screens"
     }
   ],

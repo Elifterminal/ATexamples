@@ -25,6 +25,16 @@ const TURNS = 17
 // Stand-ins for real navigation. Only x and which side they sit on are fixed
 // here — the actual world position is derived below, so the glass panel and the
 // DOM anchor are placed from one calculation and cannot drift apart.
+// One loop per card. Cut from the Blender Foundation's open movies (CC BY 3.0) —
+// see public/media/ATTRIBUTION.md. Placeholders for a study, not final content.
+const LOOPS = [
+  'loop-01.mp4',
+  'loop-02.mp4',
+  'loop-03.mp4',
+  'loop-04.mp4',
+  'loop-05.mp4',
+]
+
 const CARDS = [
   { label: 'Index', meta: '00', href: '../../', x: -17, side: 1 },
   { label: 'Catalogue', meta: '01', href: '../001-glass-catalogue/', x: -8, side: -1 },
@@ -158,15 +168,28 @@ function Scene({ scroll, cardRefs }) {
   // of that or it will poke through the tube.
   const screen = useControls('screens', {
     play: true,
+    // Additive is what makes them see-through: a dark part of a frame adds
+    // nothing, so the helix and the dust read straight through it. Normal
+    // blending is the honest television, kept for comparison.
+    // Normal by default. Additive sounded like the answer to "see through them"
+    // and it is, for the dark end — but a bright frame then saturates, the bloom
+    // pass finds it, and the panel becomes a light box with no picture in it.
+    // Normal blending at less than full opacity is see-through everywhere and
+    // still has an image. Additive is kept for the holographic read.
+    blend: { value: 'normal', options: { 'normal (image survives)': 'normal', 'additive (glows, blows out)': 'additive' } },
     setback: { value: 0.1, min: 0.01, max: 1.5, step: 0.01 },
     inset: { value: 0.88, min: 0.2, max: 1, step: 0.01 },
-    opacity: { value: 0.85, min: 0, max: 2, step: 0.01 },
-    desaturate: { value: 0.35, min: 0, max: 1, step: 0.01 },
+    opacity: { value: 0.82, min: 0, max: 2, step: 0.01 },
+    lumaKey: { value: 0.3, min: 0, max: 1, step: 0.01 },
+    desaturate: { value: 0.28, min: 0, max: 1, step: 0.01 },
     tint: '#b9ccff',
-    shafts: { value: 0.17, min: 0, max: 2, step: 0.005 },
-    shaftLength: { value: 9, min: 0.5, max: 30, step: 0.1 },
-    shaftSpread: { value: 3.2, min: 1, max: 8, step: 0.05 },
-    shaftSoftness: { value: 1.4, min: 0.2, max: 8, step: 0.1 },
+    // Wider than the fade, so a panel is already running by the time you can
+    // see it. Only cards inside this radius decode at all.
+    radius: { value: 16, min: 2, max: 60, step: 1 },
+    beams: { value: 0.17, min: 0, max: 2, step: 0.005 },
+    beamLength: { value: 9, min: 0.5, max: 30, step: 0.1 },
+    beamSpread: { value: 3.2, min: 1, max: 8, step: 0.05 },
+    beamSoftness: { value: 1.4, min: 0.2, max: 8, step: 0.1 },
     rayFreq: { value: 9, min: 0, max: 40, step: 0.5 },
     rayDepth: { value: 0.7, min: 0, max: 1, step: 0.01 },
     rake: { value: 1.15, min: 0, max: 2, step: 0.01 },
@@ -325,7 +348,12 @@ function Scene({ scroll, cardRefs }) {
       {screen.play ? (
         <CardScreens
           positions={positions}
-          src={`${import.meta.env.BASE_URL}media/panel-loop.mp4`}
+          base={import.meta.env.BASE_URL}
+          sources={LOOPS}
+          play={screen.play}
+          blend={screen.blend}
+          radius={screen.radius}
+          lumaKey={screen.lumaKey}
           width={card.width}
           height={card.height}
           panelZ={card.z}
@@ -336,10 +364,10 @@ function Scene({ scroll, cardRefs }) {
           opacity={screen.opacity}
           desaturate={screen.desaturate}
           tint={screen.tint}
-          shafts={screen.shafts}
-          shaftLength={screen.shaftLength}
-          shaftSpread={screen.shaftSpread}
-          shaftSoftness={screen.shaftSoftness}
+          beams={screen.beams}
+          beamLength={screen.beamLength}
+          beamSpread={screen.beamSpread}
+          beamSoftness={screen.beamSoftness}
           rayFreq={screen.rayFreq}
           rayDepth={screen.rayDepth}
           rake={screen.rake}
