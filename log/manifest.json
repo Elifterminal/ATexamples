@@ -87,6 +87,12 @@
       "rule": "A living page names its own project in its heading.",
       "why": "One page per project, and it has to say which — the h1 carries the project, the document type sits above it as a kicker. A page led by its document type cannot be told apart from every other page built in the same format. Checked rather than remembered: the build fails when the project field is missing, when it matches a blocklist of generic document nouns, or when the rendered heading doesn't contain it.",
       "from": "L-33"
+    },
+    {
+      "id": "R-13",
+      "rule": "Let the material do the effect.",
+      "why": "Before reaching for a filter, check whether something already in the scene produces it physically. Content placed behind glass is diffused by the glass, and that diffusion cannot drift out of step with the material the way a hand-matched blur would.",
+      "from": "L-34"
     }
   ],
   "assets": [
@@ -580,6 +586,54 @@
           "why": "Found by swapping in an opaque debug material, which showed the panel exactly where it should be, at the right size, correctly aligned with its label. The geometry was never wrong; the scene gave the material nothing to return. Fixed by drawing the edge as real geometry and frosting the face enough to scatter the key across it."
         }
       ]
+    },
+    {
+      "id": "card-screens",
+      "name": "Screens",
+      "example": "002-scroll-helix",
+      "born": "2026-07-29",
+      "status": "active",
+      "derived_from": "card-panels",
+      "line": "Footage behind each panel, kept distant by the glass in front of it, throwing raked light forward through it.",
+      "geometry": "one plane per panel behind the glass, plus a 22-slice beam in front of each; both merged into single geometries",
+      "authored_geometry": 0,
+      "made_of": "Two pieces that only make sense together. The screen is never drawn sharp and is never blurred either — the panel in front is frosted and its transmission pass diffuses whatever is behind it, so the material does the work and the setback distance is the whole distance control. The beam is a stack of soft slices lying in the plane the camera always faces, marching along a raked axis and coloured, six times a second, by the average colour of the footage at that moment. One video element feeds all five panels, each taking a different crop of the same frame.",
+      "recipe": {
+        "diffusion": "none applied — the panel's own transmission pass does it; setback is the distance knob",
+        "clearance": "the screen must stay outside 1.45 from the axis or it pokes through the form",
+        "distance": "desaturation rather than dimming — colour goes before light does",
+        "beam": "22 slices in the XY plane, which in this scene is camera-facing because the camera travels but never turns",
+        "rake": "blended from the scene's own light direction — light leaves a window travelling away from what lit it, and an unraked beam is seen down its own axis and has no length",
+        "striation": "two incommensurate frequencies across the beam; without it an unbroken rectangle emits a wash",
+        "colour": "sampled from a 1x1 canvas draw of the video, 6 times a second — the browser's own downscale is the averaging",
+        "fade": "beams and screens fade with camera distance the same way the labels do, or every panel sprays light at once",
+        "decoders": "one, shared, parked in the document",
+        "placeholder": "public/media/panel-loop.mp4 — 39KB, generated, seamless palindrome loop; swap the src for real footage"
+      },
+      "revisions": [
+        {
+          "date": "2026-07-29",
+          "kind": "born",
+          "ask": "A-21",
+          "lessons": [
+            "L-34",
+            "L-37"
+          ],
+          "change": "Footage behind the panels and light thrown forward through them. Ships with a generated abstract loop as a stand-in.",
+          "why": "The study needed a reason to keep going rather than only something to look at. The placeholder is generated rather than sourced because this repo is public and carries no media it did not make."
+        },
+        {
+          "date": "2026-07-29",
+          "kind": "failure",
+          "ask": "A-21",
+          "lessons": [
+            "L-35",
+            "L-36"
+          ],
+          "change": "The beams went wrong twice. First as a hollow frustum lit by a rim term, which drew two hard diagonal lines across the frame — the geometry's own outline rather than light. Then, once softened into slices, as an even wash with no ray structure at all.",
+          "why": "Two different mistakes with the same root: treating a beam as a surface. A rim term is right for a shell standing in for an atmosphere and wrong for an open cone. And rays are only legible because something breaks the source up — a plain rectangle emits evenly, so the striation had to be put in deliberately."
+        }
+      ]
     }
   ],
   "asks": [
@@ -735,6 +789,14 @@
       "verbatim": "Make sure the living-page for this project isnt being confused by previous projects. Every time I ask for a living page, it is for it own specific project. The cards link to that page, it appears, and it looks like that has gotten a little blurry with the previous project. Make sure this projects living-page is only about this project.",
       "summary": "Caught this page failing to say which project it belongs to, next to another project's page built in the same format.",
       "effect": "The page leads with the project's own name instead of the name of a kind of document, and the checker now fails the build if a future one doesn't. A card also links here directly rather than by way of the index.",
+      "kind": "direction"
+    },
+    {
+      "id": "A-21",
+      "date": "2026-07-29",
+      "verbatim": "is it possible to make the glass cards play videos, but, like, videos that look like they remain behind the fogged glass. sort of distant? And that project their light through the glass with god rays?",
+      "summary": "Asked for footage behind the panels, kept distant and diffused by the glass, throwing light forward through it.",
+      "effect": "Screens and beams. The diffusion turned out to be free — the panel was already frosted and its transmission pass blurs whatever sits behind it — so the work was almost entirely in the light, not the video.",
       "kind": "direction"
     }
   ],
@@ -969,6 +1031,34 @@
       "lesson": "Being unable to use a name is not a reason to have none.",
       "detail": "This page is published from a public repo and the project's own name has to stay off it, so it was titled 'Asset Log' — a kind of document, not a project. Every word of its content was its own and its only outbound link was its own repo, but a title that would fit any other project unchanged identifies nothing, and beside another project's page in the same format it read as a generic sibling of it. The restriction was on one particular name, not on having one; the public repo name was available the whole time and is already findable. The heading now carries the project and the document type is demoted to a kicker above it.",
       "from": "scroll-helix"
+    },
+    {
+      "id": "L-34",
+      "sign": "pos",
+      "lesson": "When a material already does a thing, put the content where the material can act on it.",
+      "detail": "'Behind fogged glass, sort of distant' sounds like a video treatment — blur it, desaturate it, dim it. None of that was needed. The panel is frosted and its transmission pass already blurs whatever is behind it, so a plane placed behind the glass comes out diffused by the material itself, and how far back it sits is the entire distance control. A blur applied to the video would have been an effect that has to be kept in sync with the glass by hand; this one cannot go out of sync because it is the same physics.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-35",
+      "sign": "neg",
+      "lesson": "A rim term draws a shell's own outline. It is right for atmospheres and wrong for beams.",
+      "detail": "The first beam was a hollow frustum whose alpha rose where the surface turned edge-on — the standard trick for a glow around a sphere, where the eye really does see through more material at the limb. On an open cone it puts maximum brightness exactly along the silhouette, so it drew two hard diagonal lines across the frame: a picture of the geometry rather than of light. Replaced with a stack of soft slices along the beam axis, where the edge fade is explicit instead of inferred from the viewing angle.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-36",
+      "sign": "neg",
+      "lesson": "A beam aimed at the camera is a rectangle, and an unbroken source is a wash.",
+      "detail": "Two separate reasons the first attempts did not look like god rays. The light leaves the panel travelling toward the viewer, and a beam seen down its own axis has no length to show — it needed raking, which the scene's own light direction supplied, since light leaves a window travelling away from whatever lit it. And a plain rectangle emits evenly: rays are only legible because something breaks the source up. Adding striation at two incommensurate frequencies was the difference between a glow and a beam.",
+      "from": "card-screens"
+    },
+    {
+      "id": "L-37",
+      "sign": "pos",
+      "lesson": "One decoder, many surfaces.",
+      "detail": "Five panels suggests five videos, which is five decoders running at once and the reason a page like this stutters on a laptop. One element feeds every panel and each takes a different crop of the same frame, which costs nothing and stops them reading as five copies of one thing. The element is parked in the document rather than left detached — a detached video decodes in some browsers and quietly does not in others, and display:none is a documented reason to stop decoding altogether.",
+      "from": "card-screens"
     }
   ],
   "perf_levers": [
@@ -1063,6 +1153,11 @@
       "id": "Q-13",
       "q": "The panels do not fade with distance but their labels do.",
       "why": "The DOM anchors fade with camera distance so they arrive and leave rather than popping. The glass does not — it is scenery and sits in the world permanently. At the frame edges that can mean a visible panel with no text on it. It may read as perfectly natural or as an oversight, and only watching it move will tell."
+    },
+    {
+      "id": "Q-14",
+      "q": "What the beams cost, and whether they survive real footage.",
+      "why": "Twenty-two additive slices per panel is a lot of overdraw for something this subtle, and it has never been measured on a GPU. The placeholder is also a slow abstract gradient, which is the kindest possible input — real footage cuts, and a beam colour sampled six times a second across a hard cut may strobe."
     }
   ]
 }

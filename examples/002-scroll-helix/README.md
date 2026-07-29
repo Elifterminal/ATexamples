@@ -92,6 +92,32 @@ Surface texture is a procedural grain map — fine noise plus a low-frequency ve
 
 **Still open:** the panels don't fade with distance but their labels do. The glass is scenery and sits in the world permanently, so at the frame edges you can get a visible panel with no text on it. That may read as natural or as an oversight; only watching it move will tell.
 
+## The screens, and the light through them
+
+Footage plays behind each panel and throws light forward through it.
+
+**The "behind fogged glass" part needed no work at all**, which is the useful finding. It sounds like a video treatment — blur it, desaturate, dim — but the panel in front is already frosted and its transmission pass diffuses whatever sits behind it. A plane placed behind the glass comes out diffused *by the material*, and how far back it sits is the entire distance control. A blur applied to the video would have been a second effect to keep in sync with the glass by hand; this one can't drift, because it's the same physics.
+
+The only distance trick that isn't free: **desaturating rather than dimming**. Distance reads as loss of colour before loss of light.
+
+One caveat worth knowing — the screen has to stay outside 1.45 from the axis, because that's how far the form reaches in any direction. Set it back further than that and it pokes through the tube.
+
+### The beams went wrong twice
+
+**First as hard lines.** A hollow frustum with a rim term — alpha rising where the surface turns edge-on. That's right for a shell standing in for an atmosphere, where you really do see through more material at the limb. On an open cone it puts maximum brightness exactly along the silhouette, so it drew two crisp diagonals across the frame: a picture of the geometry, not of light.
+
+**Then as an even wash.** Rebuilt as a stack of soft slices, which fixed the edges and produced a featureless glow. Two separate reasons: a beam aimed at the camera is seen down its own axis and has no length to show, and a plain rectangle emits evenly. Rays are only legible because *something breaks the source up*.
+
+Both fixes come from the scene itself. The rake is blended from the shared light direction — light leaves a window travelling away from whatever lit it — and the striation is two incommensurate frequencies across the beam.
+
+The beam colour is sampled from the footage six times a second, via a 1×1 canvas draw. The browser's own downscale is the averaging, in C, for free.
+
+### One decoder
+
+Five panels suggests five videos, which is five decoders and the reason a page like this stutters on a laptop. One element feeds all five, each taking a different crop of the same frame. It's parked in the document rather than left detached — a detached video decodes in some browsers and quietly doesn't in others, and `display:none` is a documented reason to stop decoding altogether.
+
+`public/media/panel-loop.mp4` is a generated 39KB seamless loop, not footage. This repo carries no media it didn't make. Point the `src` at anything to replace it.
+
 ## Lighting
 
 The whole scene was flat, and the instinct — reach for the glass material — was wrong. The glass was fine. **The scene was lit four separate ways that didn't agree**: the environment had its own rig, the luminous core was drawn unlit, and both particle systems were flat colour with no notion of a light at all. Nothing agreed about where the light was, so nothing read as lit.

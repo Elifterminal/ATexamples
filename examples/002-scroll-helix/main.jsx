@@ -9,6 +9,7 @@ import { HelixParticles } from './scene/HelixParticles.jsx'
 import { DustVeil } from './scene/DustVeil.jsx'
 import { HexPlates } from './scene/HexPlates.jsx'
 import { CardPanels } from './scene/CardPanels.jsx'
+import { CardScreens } from './scene/CardScreens.jsx'
 import { ScrollRig } from './scene/ScrollRig.jsx'
 import { KEY, useLightDirection } from './scene/lighting.js'
 import { AdaptiveQuality } from './scene/AdaptiveQuality.jsx'
@@ -145,6 +146,32 @@ function Scene({ scroll, cardRefs }) {
     grain: { value: 0.35, min: 0, max: 1, step: 0.01 },
     grainScale: { value: 3, min: 0.25, max: 12, step: 0.25 },
     panelRes: { value: 256, options: { '128 (cheapest)': 128, 256: 256, 512: 512 } },
+  })
+
+  // What plays behind the glass, and the light it throws forward through it.
+  // The footage is never drawn sharp — the panel in front is already frosted and
+  // the transmission pass blurs whatever is behind it, so `setback` is the knob
+  // that says how far away the thing appears to be.
+  //
+  // Keep setback small enough that the screen stays outside the helix: the form
+  // reaches 1.45 from the axis in any direction, so the plane must sit in front
+  // of that or it will poke through the tube.
+  const screen = useControls('screens', {
+    play: true,
+    setback: { value: 0.1, min: 0.01, max: 1.5, step: 0.01 },
+    inset: { value: 0.88, min: 0.2, max: 1, step: 0.01 },
+    opacity: { value: 0.85, min: 0, max: 2, step: 0.01 },
+    desaturate: { value: 0.35, min: 0, max: 1, step: 0.01 },
+    tint: '#b9ccff',
+    shafts: { value: 0.17, min: 0, max: 2, step: 0.005 },
+    shaftLength: { value: 9, min: 0.5, max: 30, step: 0.1 },
+    shaftSpread: { value: 3.2, min: 1, max: 8, step: 0.05 },
+    shaftSoftness: { value: 1.4, min: 0.2, max: 8, step: 0.1 },
+    rayFreq: { value: 9, min: 0, max: 40, step: 0.5 },
+    rayDepth: { value: 0.7, min: 0, max: 1, step: 0.01 },
+    rake: { value: 1.15, min: 0, max: 2, step: 0.01 },
+    fadeNear: { value: 4, min: 0.5, max: 30, step: 0.5 },
+    fadeFar: { value: 11, min: 1, max: 40, step: 0.5 },
   })
 
   // One calculation, two consumers: the glass and the DOM anchors.
@@ -294,6 +321,33 @@ function Scene({ scroll, cardRefs }) {
         ambient={light.ambient}
         contrast={light.contrast}
       />
+
+      {screen.play ? (
+        <CardScreens
+          positions={positions}
+          src={`${import.meta.env.BASE_URL}media/panel-loop.mp4`}
+          width={card.width}
+          height={card.height}
+          panelZ={card.z}
+          panelDepth={card.depth}
+          bevel={card.bevel}
+          setback={screen.setback}
+          inset={screen.inset}
+          opacity={screen.opacity}
+          desaturate={screen.desaturate}
+          tint={screen.tint}
+          shafts={screen.shafts}
+          shaftLength={screen.shaftLength}
+          shaftSpread={screen.shaftSpread}
+          shaftSoftness={screen.shaftSoftness}
+          rayFreq={screen.rayFreq}
+          rayDepth={screen.rayDepth}
+          rake={screen.rake}
+          direction={direction}
+          fadeNear={screen.fadeNear}
+          fadeFar={screen.fadeFar}
+        />
+      ) : null}
 
       <CardPanels
         positions={positions}
