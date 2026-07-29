@@ -24,7 +24,15 @@ Four things, in order of how much doubt there was.
 
 **Pixel-decoupling works exactly as intended.** The scroll span is set in viewport units (`700vw`), so the journey is 7 viewport-widths on every device. Measured: 7700/1100 on desktop, 2940/420 on a phone — identical ratio. A phone and an ultrawide travel the same distance at different scales, which is the whole point.
 
-**Fitting a fixed world-width is NOT enough, and this was the real finding.** The first version computed camera distance so a chosen world-width always fit the frame. On desktop it was right. On portrait it pushed the camera so far back that the helix became a thread floating in empty space — technically correct framing, visually dead. The mitigation here scales the visible span with aspect ratio as well, so narrow screens show fewer turns at a size that still reads.
+**Fitting a width alone leaves the height to the aspect ratio — and that shipped broken.** The camera distance was solved for a world width, which makes it *inversely proportional* to the aspect ratio: the wider the screen, the closer the camera comes, and the less vertical world stays in frame. Nothing checked the content still fit top to bottom. Measured on a 2:1 monitor, 2.02 units of half-height for panels reaching 2.4 — clipped by about ninety pixels, with the form taking 72% of the frame.
+
+Depth was the other half. The panels stand 1.75 units *in front* of the form, so they're nearer the camera and magnified relative to it — the tallest content is also the closest. A fit computed against the origin plane is simply wrong for anything not sitting on it. Arithmetic against the origin predicted 2.75 units where the real number was 2.02, and all of that gap was depth.
+
+It now asks, per piece of content, how far back the camera must be for *that* piece at *its own* depth, and takes the largest answer, against the width fit. Portrait is untouched — the width fit still wins below about 1.54:1, which is why the phone held upright always looked right.
+
+**It survived this long because of where it was reviewed.** Every judgement in this study was made through a 640×400 or 900×560 frame, because that's what the build environment can render, and both sit near the one aspect where the bug almost doesn't show. It took a screenshot from a real monitor to surface it. The review viewport is as much a part of the apparatus as the renderer.
+
+**Fitting a fixed world-width is NOT enough, and this was the earlier half of the same finding.** The first version computed camera distance so a chosen world-width always fit the frame. On desktop it was right. On portrait it pushed the camera so far back that the helix became a thread floating in empty space — technically correct framing, visually dead. The mitigation here scales the visible span with aspect ratio as well, so narrow screens show fewer turns at a size that still reads.
 
 That improves portrait from broken to acceptable. It does not make it good. A horizontal form in a tall frame wastes most of the screen no matter how it's scaled, and the honest fix is a **rotated vertical variant** designed as its own composition — which is also free of seams, since the two variants never appear together.
 

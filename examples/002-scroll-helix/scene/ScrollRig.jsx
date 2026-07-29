@@ -6,7 +6,7 @@ const projected = new THREE.Vector3()
 // Smooths the raw scroll target, moves the camera along the helix, keeps a
 // chosen world-width in frame at any aspect ratio, and projects the card anchors
 // down to screen pixels for the DOM layer.
-export function ScrollRig({ scroll, travel, visibleWidth, damping, cards, cardRefs }) {
+export function ScrollRig({ scroll, travel, visibleWidth, damping, content, margin, cards, cardRefs }) {
   const { camera, size } = useThree()
 
   useFrame((_, delta) => {
@@ -18,19 +18,35 @@ export function ScrollRig({ scroll, travel, visibleWidth, damping, cards, cardRe
     state.current += (state.target - state.current) * Math.min(1, delta * damping)
     state.velocity = delta > 0 ? (state.current - previous) / delta : 0
 
-    // Camera distance from aspect, so the composition is intentional on an
-    // ultrawide and on a phone rather than merely cropped.
+    // Camera distance, fitted on BOTH axes.
     //
-    // Fitting a FIXED world-width is not enough on its own: on a narrow frame it
-    // pushes the camera so far back the helix becomes a thread in empty space.
-    // So the span narrows with the aspect too — fewer turns on screen, at a size
-    // that still reads. This mitigates portrait; it does not solve it. The real
-    // answer is a rotated vertical variant.
+    // Fitting a world width alone was the original approach and it hides a trap:
+    // the distance needed comes out inversely proportional to the aspect ratio,
+    // so the wider the screen, the CLOSER the camera comes, and the less vertical
+    // world stays in frame. Nothing ever checked the content still fit
+    // top-to-bottom. On a 2:1 monitor that left 2.02 units of half-height for
+    // panels reaching 2.4 — clipped by about ninety pixels, and the form filling
+    // 72% of the frame with it.
+    //
+    // The other half of the trap is depth. The panels stand 1.75 units in front
+    // of the helix, so they are nearer the camera and magnified relative to it —
+    // the tallest content is also the closest. Fitting a height means asking, per
+    // piece of content, how far back the camera has to be for THAT piece at ITS
+    // depth, and taking the largest answer.
+    //
+    // The width fit still wins on narrow frames, which is why portrait is
+    // unchanged — it reads well and this must not disturb it.
     const vFov = (camera.fov * Math.PI) / 180
+    const tan = Math.tan(vFov / 2)
     const spanScale = THREE.MathUtils.clamp(camera.aspect / 1.6, 0.4, 1)
-    const fit = (visibleWidth * spanScale) / 2 / (Math.tan(vFov / 2) * camera.aspect)
 
-    camera.position.set((state.current - 0.5) * travel, 0, Math.max(fit, 3))
+    const forWidth = (visibleWidth * spanScale) / 2 / (tan * camera.aspect)
+    const forHeight = content.reduce(
+      (needed, item) => Math.max(needed, (item.reach + margin) / tan + item.depth),
+      0,
+    )
+
+    camera.position.set((state.current - 0.5) * travel, 0, Math.max(forWidth, forHeight, 3))
     camera.updateProjectionMatrix()
 
     // Cards live in the DOM — real links, real text, responsive for free — but

@@ -68,6 +68,10 @@ function Scene({ scroll, cardRefs }) {
     radius: { value: 1.15, min: 0.2, max: 4, step: 0.05 },
     tube: { value: 0.3, min: 0.02, max: 0.9, step: 0.005 },
     visibleWidth: { value: 11, min: 4, max: 30, step: 0.5 },
+    // Breathing room kept around whatever has to stay in frame. The rim glow and
+    // the bloom spread past the geometry, so fitting the panels exactly still
+    // reads as clipped.
+    margin: { value: 0.45, min: 0, max: 3, step: 0.05 },
     damping: { value: 4.5, min: 0.5, max: 20, step: 0.1 },
   })
 
@@ -205,6 +209,17 @@ function Scene({ scroll, cardRefs }) {
 
   const positions = useMemo(() => placed.map((c) => c.position), [placed])
 
+  // Everything that has to stay in frame, and how far forward each piece sits.
+  // Depth matters as much as size here: the panels are both the tallest content
+  // and the closest, so they are what the framing is really solving for.
+  const content = useMemo(
+    () => [
+      { reach: form.radius + form.tube, depth: 0 },
+      { reach: card.lift + card.height / 2, depth: card.z },
+    ],
+    [form.radius, form.tube, card.lift, card.height, card.z],
+  )
+
   // Rare, much larger, and the only thing in the sheath with a face. They ride
   // the identical orbit as the dust — shared code, not a second copy — but a
   // plate can turn, and turning is what lets it catch the light and then vanish
@@ -235,6 +250,8 @@ function Scene({ scroll, cardRefs }) {
         travel={TRAVEL}
         visibleWidth={form.visibleWidth}
         damping={form.damping}
+        content={content}
+        margin={form.margin}
         cards={placed}
         cardRefs={cardRefs}
       />

@@ -110,6 +110,12 @@
       "rule": "Stop adding before it is obvious you should have.",
       "why": "Each effect here was justified on its own and the page still filled up. Nothing in the build tells you when to stop, because every individual addition renders correctly and looks defensible in isolation. Density is a decision made about the whole page, from outside it.",
       "from": "L-41"
+    },
+    {
+      "id": "R-16",
+      "rule": "Fit both axes, at the depth the content actually sits.",
+      "why": "Solving a camera distance for one dimension leaves the other to the aspect ratio, and the failure only appears at ratios away from the one being worked at. Ask each piece of content how far back the camera must be for it, at its own depth, and take the largest answer.",
+      "from": "L-42"
     }
   ],
   "assets": [
@@ -320,7 +326,7 @@
         "flow": "delta × (drift + |scrollVelocity| × surge); drift never zero",
         "cards": "real DOM <a> anchors, world position projected to screen each frame",
         "card fade": "opacity, pointer-events and tabIndex all follow camera distance",
-        "camera distance": "driven by aspect ratio",
+        "camera distance": "fitted on both axes: the larger of the width fit and, per piece of content, (reach + margin) / tan(fov/2) + that content's depth",
         "visible span": "also scaled by aspect, clamp 0.4–1.0 — the portrait mitigation",
         "tessellation": "segmentsPerTurn exposed — a long helix multiplies segments by turns",
         "lighting": "one direction (elevation/azimuth) shared by the environment, a directional lamp, the core's baked vertex shading and both particle shaders"
@@ -411,6 +417,18 @@
           ],
           "change": "The log now leads with the project's name and demotes 'Asset log' to a kicker above it, and a card in the scene links straight here instead of by way of the index. Three new build checks: the project must be named, the name must not be a generic document noun, and the rendered heading must contain it.",
           "why": "Content was never the problem — every asset here is this repo's and the only outbound link is this repo. The page simply never said whose it was, which beside another project's page in the same format is enough to blur the two. All three checks were confirmed to fire against seeded failures before being trusted."
+        },
+        {
+          "date": "2026-07-29",
+          "kind": "fix",
+          "ask": "A-24",
+          "lessons": [
+            "L-42",
+            "L-43",
+            "L-44"
+          ],
+          "change": "The camera fits both axes. Width alone made the distance inversely proportional to the aspect ratio, so wide screens pulled the camera in and cut the panels off — measured at -0.38 units of clearance on a 2:1 monitor and -0.58 on a phone held sideways. Both now clear by the stated margin, and portrait is untouched because the width fit still wins there.",
+          "why": "Reported from real hardware with screenshots, which is the only place it could have come from: every frame this study was ever reviewed in was 640x400 or 900x560, and both sit near the one aspect where the bug almost does not show."
         }
       ]
     },
@@ -846,6 +864,14 @@
       "summary": "Called this page finished for effects and named the next problem as narrative across linked pages rather than more technique on one.",
       "effect": "A deliberate stop. Nothing was added in response to this — the direction is that the answer to 'what next' is no longer a rendering question, and the page transition is the first thing that has to be decided.",
       "kind": "direction"
+    },
+    {
+      "id": "A-24",
+      "date": "2026-07-29",
+      "verbatim": "The only issue left with this is that it doesnt fit the screen well. It actually looks great on the phone, when in vertical, but it doesnt fit horizontal on the phone and it doesnt fit well on a monitor.",
+      "summary": "Reported the framing failing on every landscape screen, with screenshots from real hardware, while portrait reads well.",
+      "effect": "The camera now fits both axes instead of only width. The reported symptom was the whole bug: fitting a width alone leaves the vertical extent to fall out of the aspect ratio, and nothing ever checked the content still fit.",
+      "kind": "direction"
     }
   ],
   "lessons": [
@@ -1135,6 +1161,27 @@
       "lesson": "A page can be finished for effects long before it is finished.",
       "detail": "Every element here earned its place and the page still reached a point where the next good decision was to stop adding to it. Restraint is not a technical judgement and nothing in this log could have produced it — the effects each worked, none of them was wrong, and one more would still have rendered. It came from the director looking at the whole thing and saying it was full. Worth recording because the failure it avoids leaves no trace: a page that is merely busy looks, from inside the work, exactly like a page that is rich.",
       "from": "scroll-helix"
+    },
+    {
+      "id": "L-42",
+      "sign": "neg",
+      "lesson": "Fitting one axis means the other is whatever the aspect ratio leaves you.",
+      "detail": "The camera distance was solved for a world width, which makes it inversely proportional to the aspect ratio — so the wider the screen the CLOSER the camera comes, and the less vertical world stays in frame. Nothing ever asked whether the content still fit top to bottom. Measured on a 2:1 monitor: 2.02 units of half-height for panels reaching 2.4, clipped by about ninety pixels, with the form taking 72% of the frame. It survived this long because the failure gets worse as screens get wider and the study was built and reviewed at 640x400 and 900x560, which are the two aspects where it very nearly holds.",
+      "from": "scroll-helix"
+    },
+    {
+      "id": "L-43",
+      "sign": "neg",
+      "lesson": "Fitting content to a frame is a question about depth, not just size.",
+      "detail": "The panels stand 1.75 units in front of the form, so they are nearer the camera and magnified relative to it — the tallest content in the scene is also the closest, and the two compound. A fit computed against the origin plane is wrong for anything that does not sit on it. The fix asks, for each piece of content, how far back the camera must be for THAT piece at ITS OWN depth, and takes the largest answer. Arithmetic against the origin plane predicted 2.75 units of half-height where the real number was 2.02, and the whole of that gap was depth.",
+      "from": "card-panels"
+    },
+    {
+      "id": "L-44",
+      "sign": "pos",
+      "lesson": "The screen the work is reviewed on is a test condition nobody declares.",
+      "detail": "Every judgement in this log was made through a 640x400 or 900x560 frame, because that is what the build environment could render. Both sit near the aspect where the framing bug almost does not show. It took a screenshot from a real monitor to surface something that had been shipping wrong on every wide screen for days. Worth stating as a limit of the method rather than a one-off: the review viewport is as much a part of the apparatus as the renderer, and this one had been silently narrowing what could be seen.",
+      "from": "scroll-helix"
     }
   ],
   "perf_levers": [
@@ -1239,6 +1286,11 @@
       "id": "Q-15",
       "q": "The page transition, which stops being optional the moment there is a second page.",
       "why": "Clicking a card does a normal page load — the one seam in this study still fully visible, and the only one that cannot be hidden by tuning something. Carrying the world across a navigation needs a WebGL context that outlives the page, with the DOM swapping around it. That is an architecture decision, and it is now the first one, because linked pages are the next piece of work."
+    },
+    {
+      "id": "Q-16",
+      "q": "Whether a landscape phone wants this composition at all.",
+      "why": "It fits now, which is not the same as being designed for. A 2.2:1 frame 390 pixels tall gets the form and a panel and very little air, and the honest answer may be a different arrangement rather than a further-back camera — the same argument already made for portrait, from the other end."
     }
   ]
 }
